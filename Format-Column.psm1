@@ -165,7 +165,7 @@ function Format-Column {
     }
     
     # Create format string for output.
-    $format = (1..$ColumnCount | ForEach-Object {
+    $formatString = (1..$ColumnCount | ForEach-Object {
         $column = $_ - 1
         "{0}${column},$(-($columnWidth + $gutterWidth)){1}" -f '{','}'
     }) -join ''
@@ -179,7 +179,7 @@ function Format-Column {
             if ($OrderBy -eq 'Column') { @($inputData)[$row + $column * $rowCount] }
             if ($OrderBy -eq 'Row') { @($inputData)[$column + $row * $ColumnCount] }
         }
-        Write-Output ($format -f $lineContent)
+        Write-Output ($formatString -f $lineContent)
     }
     Write-Output "`n"
 }
