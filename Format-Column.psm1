@@ -103,13 +103,13 @@ function Format-Column {
                         catch { Write-Error "Error when processing Property input." -Category 5 -EA 1 }
                     }
                 }
-                else { Write-Error "Invalid 'Expression' key type." -Category 5 -EA 1 }
+                else { Write-Error "Invalid Expression key type." -Category 5 -EA 1 }
             }
             if ($Property.FormatString) {
                 if ($Property.FormatString -is [String]) {
                     $inputData = $inputData | ForEach-Object { $Property.FormatString -f $_ }
                 }
-                else { Write-Error "Invalid 'FormatString' key type." -Category 5 -EA 1 }
+                else { Write-Error "Invalid FormatString key type." -Category 5 -EA 1 }
             }
         }
         elseif ($Property -is [ScriptBlock]) {
