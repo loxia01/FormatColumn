@@ -52,7 +52,7 @@ function Format-Column {
  Get-Process | Format-Column -Property @{Expression='Handles'; FormatString='{0:00000}'} -MinRowCount 15
  
 .EXAMPLE
- # These property syntaxes are all equivalent:
+ # These syntaxes are all equivalent:
  PS C:\>Get-Process | Format-Column -Property ProcessName                    # name
  PS C:\>Get-Process | Format-Column -Property {$_.ProcessName}               # scriptblock
  PS C:\>Get-Process | Format-Column -Property @{Expression='ProcessName'}    # hashtable string expression
