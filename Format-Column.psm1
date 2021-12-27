@@ -12,10 +12,10 @@ function Format-Column {
 .PARAMETER Property
  Name of object property to be displayed.
  The value of the Property parameter can also be a calculated property:
-    - a hashtable in the form of:
-        - 'Expression' = <string>|<scriptblock>
-        - 'Expression' = <string>|<scriptblock> and 'FormatString' = <string>
-    - a scriptblock
+    ● hashtable in the form of:
+        ● 'Expression' = <string>|<scriptblock>
+        ● 'Expression' = <string>|<scriptblock> and 'FormatString' = <string>
+    ● scriptblock
  
  Property parameter is optional. However, if omitted for objects with named properties,
  no meaningful data output will be produced.
@@ -34,8 +34,8 @@ function Format-Column {
  
 .PARAMETER OrderBy
  Determines data order in column output. Valid values are:
-    - Column: Orders data by column.
-    - Row: Orders data by row.
+    ● Column: Orders data by column.
+    ● Row: Orders data by row.
  
  Default is 'Column'. 
  
