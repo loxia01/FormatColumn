@@ -100,7 +100,7 @@ function Format-Column {
                     $expression = [ScriptBlock]::Create($expression)
                     $inputData = $inputData | ForEach-Object {
                         try { & $expression }
-                        catch { Write-Error "Error when processing 'Property' input." -Category 5 -EA 1 }
+                        catch { Write-Error "Error when processing Property input." -Category 5 -EA 1 }
                     }
                 }
                 else { Write-Error "Invalid 'Expression' key type." -Category 5 -EA 1 }
@@ -116,7 +116,7 @@ function Format-Column {
             $Property = [ScriptBlock]::Create($Property)
             $inputData = $inputData | ForEach-Object {
                 try { & $Property }
-                catch { Write-Error "Error when processing 'Property' input." -Category 5 -EA 1 }
+                catch { Write-Error "Error when processing Property input." -Category 5 -EA 1 }
             }
         }
         elseif ($Property -is [String]) {
