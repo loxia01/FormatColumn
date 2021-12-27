@@ -40,7 +40,7 @@ function Format-Column {
  Default is 'Column'. 
  
 .PARAMETER InputObject
- Input data to display. Accepts pipeline input.
+ Object to format for display. Accepts pipeline input.
  
 .EXAMPLE
  1..150 | Format-Column -OrderBy Row
