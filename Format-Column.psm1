@@ -171,7 +171,7 @@ function Format-Column {
     }) -join ''
     
     # Output data ordered by column or by row.
-    Write-Host "`n"
+    Write-Output "`n"
     1..$rowCount | ForEach-Object {
         $row = $_ - 1
         $lineContent = 1..$ColumnCount | ForEach-Object {
@@ -181,5 +181,5 @@ function Format-Column {
         }
         Write-Output ($format -f $lineContent)
     }
-    Write-Host "`n"
+    Write-Output "`n"
 }
