@@ -1,10 +1,10 @@
 function Format-Column {
 <#
 .SYNOPSIS
- Format-Column function formats input data to columns.
+ Format-Column formats input objects as columns.
  
 .DESCRIPTION
- Format-Column outputs data into columns, like the built-in cmdlet Format-Wide.
+ Format-Column function outputs object data into columns, like the built-in cmdlet Format-Wide.
  It can order output data column by column in addition to row by row,
  as is the only option in Format-Wide. Format-Column also performs some initial input data
  processing which makes it easy to input objects without named properties e.g. plain arrays.
