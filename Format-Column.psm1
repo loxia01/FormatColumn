@@ -7,7 +7,7 @@ function Format-Column {
  Format-Column function outputs object data into columns, like the built-in cmdlet Format-Wide.
  It can order output data column by column in addition to row by row,
  as is the only option in Format-Wide. Format-Column also performs some initial input data
- processing which makes it easy to input objects without named properties e.g. plain arrays.
+ processing which makes it easy to input objects without properties e.g. plain arrays.
  
 .PARAMETER Property
  Name of object property to be displayed.
@@ -18,7 +18,7 @@ function Format-Column {
      - @{Expression = <string>|{<scriptblock>}; FormatString = <string>}
  - a script block.
  
- Property parameter is optional. However, if omitted for objects with named properties,
+ Property parameter is optional. However, if omitted for objects with properties,
  no comprehensible data output will be produced.
  
 .PARAMETER ColumnCount
