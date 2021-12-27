@@ -149,8 +149,8 @@ function Format-Column {
     
     $columnWidth = [Math]::Floor(($consoleWidth - $ColumnCount * $gutterWidth) / $ColumnCount)
     
-    # Truncate strings longer than column width (applicable only for CustomSize mode, or if
-    # extremely long strings (≥ console width) are present in AutoSize mode).
+    <# Truncate strings longer than column width (applicable only for CustomSize mode, or if
+       extremely long strings (≥ console width) are present in AutoSize mode). #>
     if ($maxLength -gt $columnWidth) {
         if ($columnWidth -ge 3) {
             $inputData = $inputData | ForEach-Object {
