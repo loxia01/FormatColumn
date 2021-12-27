@@ -84,7 +84,6 @@ function Format-Column {
         [PSObject]$InputObject
     )
     if ($input) { $InputObject = $input }
-    
     if ($InputObject.Count -gt 0) { $inputData = $InputObject }
     else { return $InputObject}
     
