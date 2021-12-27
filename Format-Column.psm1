@@ -59,7 +59,7 @@ function Format-Column {
  PS C:\>Get-Process | Format-Column -Property @{Expression='ProcessName'}    # hashtable string expression
  PS C:\>Get-Process | Format-Column -Property @{Expression={$_.ProcessName}} # hashtable scriptblock expression
 #>
-
+    
     [CmdletBinding(DefaultParameterSetName='AutoSize')]
     param(
         [Parameter(Position=0)]
