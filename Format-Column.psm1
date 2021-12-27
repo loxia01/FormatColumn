@@ -13,8 +13,8 @@ function Format-Column {
  Name of object property to be displayed.
  The value of the Property parameter can also be a calculated property:
     ● Hashtable in the form of:
-        ● @{Expression=[<string>|<scriptblock>]}
-        ● @{Expression=[<string>|<scriptblock>]; FormatString=[<string>]}
+        ● @{Expression = <string>|{<scriptblock>}}
+        ● @{Expression = <string>|{<scriptblock>}; FormatString = <string>}
     ● ScriptBlock
  
  Property parameter is optional. However, if omitted for objects with named properties,
