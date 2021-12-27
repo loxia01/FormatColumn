@@ -163,7 +163,7 @@ function Format-Column {
     # Create format string for output.
     $formatString = (1..$ColumnCount | ForEach-Object {
         $column = $_ - 1
-        "{0}${column},$(-($columnWidth + $gutterWidth)){1}" -f '{','}'
+        "{${column},$(-($columnWidth + $gutterWidth))}"
     }) -join ''
     
     # Output data ordered by column or by row.
