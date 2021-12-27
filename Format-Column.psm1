@@ -1,5 +1,3 @@
-#Requires -PSEdition Desktop
-
 function Format-Column {
 <#
 .SYNOPSIS
