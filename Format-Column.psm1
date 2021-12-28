@@ -133,12 +133,12 @@ function Format-Column {
         $ColumnCount = [Math]::Max(1, ([Math]::Floor($consoleWidth / ($maxLength + $gutterWidth))))
         if ($inputData.Count -lt $ColumnCount) { $ColumnCount = $inputData.Count }
         
-        if ($MaxColumnCount -and ($MaxColumnCount -lt $ColumnCount)) { $ColumnCount = $MaxColumnCount }
+        if ($MaxColumnCount -and $MaxColumnCount -lt $ColumnCount) { $ColumnCount = $MaxColumnCount }
     }
     
     $rowCount = [Math]::Ceiling($inputData.Count / $ColumnCount)
     
-    if ($MinRowCount -and ($MinRowCount -gt $rowCount)) {
+    if ($MinRowCount -and $MinRowCount -gt $rowCount) {
         $ColumnCount = [Math]::Max(1, ([Math]::Floor($inputData.Count / $MinRowCount)))
         $rowCount = [Math]::Ceiling($inputData.Count / $ColumnCount)
     }
