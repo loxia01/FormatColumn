@@ -85,7 +85,7 @@ function Format-Column {
     )
     if ($input) { $InputObject = $input }
     if ($InputObject.Count -gt 0) { $inputData = $InputObject }
-    else { return $InputObject}
+    else { return $InputObject }
     
     # Property argument processing and data conversion to string array.
     if ($Property) {
