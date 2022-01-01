@@ -155,9 +155,7 @@ function Format-Column {
             }
         }
         # Write terminating error if column width is too small for displaying truncate symbol "...".
-        if ($columnWidth -lt 3) {
-            Write-Error "ColumnCount value is too large for data to be displayed." -Category 5 -EA 1
-        }
+        else { Write-Error "ColumnCount value too large for data to be displayed." -Category 5 -EA 1 }
     }
     
     # Create format string for output.
