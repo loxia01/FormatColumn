@@ -1,7 +1,7 @@
 function Format-Column {
 <#
 .SYNOPSIS
- Format-Column formats input objects as columns.
+ Format-Column formats input object data as columns.
  
 .DESCRIPTION
  Format-Column function outputs object data into columns, similarly to built-in cmdlet Format-Wide.
@@ -16,7 +16,7 @@ function Format-Column {
  - a hash table in the form of:
      - @{Expression = <string>|{<scriptblock>}}
      - @{Expression = <string>|{<scriptblock>}; FormatString = <string>}
- - a script block.
+ - a script block: {<scriptblock>}
  
  Property parameter is optional. However, if omitted for objects with properties,
  no comprehensible data output will be produced.
