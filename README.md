@@ -37,11 +37,9 @@ Object to format for display. Accepts pipeline input.
 1. `1..150 | Format-Column -OrderBy Row`
 2. `Format-Column -ColumnCount 3 -InputObject @(1..130)`
 3. `Get-Process | Format-Column -Property @{Expression='Handles'; FormatString='{0:00000}'} -MinRowCount 15`
-4. `Get-Process | Format-Column -Property ProcessName`,
+4. The follwing Property syntaxes are all equivalent.
 
+   `Get-Process | Format-Column -Property ProcessName`,
    `Get-Process | Format-Column -Property {$_.ProcessName}`
-   
    `Get-Process | Format-Column -Property @{Expression='ProcessName'}`
    `Get-Process | Format-Column -Property @{Expression={$_.ProcessName}}`
-
-In examples 4-7 the Property parameter values are all equivalent.
