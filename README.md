@@ -14,8 +14,8 @@ Name of object property to be displayed.
  
 The value of the Property parameter can also be a calculated property:
 - a hash table in the form of:
-    - @{Expression = <string>|{<scriptblock>}}
-    - @{Expression = <string>|{<scriptblock>}; FormatString = <string>}
+    - `@{Expression = <string>|{<scriptblock>}}`
+    - `@{Expression = <string>|{<scriptblock>}; FormatString = <string>}`
 - a script block.
  
 Property parameter is optional. However, if omitted for objects with properties, no comprehensible data output will be produced.
