@@ -33,3 +33,5 @@ Valid values are:
 - Row: Orders data by row.
 ### InputObject
 Object to format for display. Accepts pipeline input.
+## Usage examples
+
