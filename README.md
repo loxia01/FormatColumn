@@ -1,6 +1,6 @@
 # Format-Column
 
-Format-Column formats object data as columns.
+Format-Column formats input object data as columns.
 
 ## Installation
 
