@@ -16,7 +16,7 @@ The value of the Property parameter can also be a calculated property:
 - a hash table in the form of:
     - `@{Expression = <string>|{<scriptblock>}}`
     - `@{Expression = <string>|{<scriptblock>}; FormatString = <string>}`
-- a script block.
+- a script block: `{<scriptblock>}`
  
 Property parameter is optional. However, if omitted for objects with properties, no comprehensible data output will be produced.
 ### ColumnCount
