@@ -6,14 +6,9 @@ PSFormatColumn module contains the function Format-Column that formats input obj
 Download the PS Module file (.psm1) and then copy it to your PSModulePath. Default PSModulePath is:
 
 - for a specific user: `$Env:USERPROFILE\Documents\WindowsPowerShell\Modules\<Module Folder>\<Module Files>`
-
 - for all users: `$Env:ProgramFiles\WindowsPowerShell\Modules\<Module Folder>\<Module Files>`
 
-
-
 Name the `<Module Folder>` exactly as the psm1 file, in this case `PSInternetConnectionSharing`. PowerShell will now automatically find the module and its functions.
-
-
 ## Function
 ### Format-Column
 #### Description
