@@ -13,7 +13,8 @@ Name the `<Module Folder>` exactly as the psm1 file, in this case `PSInternetCon
 ### Format-Column
 #### Description
 Format-Column function outputs object data into columns, similarly to built-in cmdlet Format-Wide. It can order output data column by column in addition to row by row, as is the only option in Format-Wide. Format-Column also performs some initial input data processing which makes it easy to input objects without properties e.g. plain arrays.
-### Property
+#### Parameters
+##### Property
 Name of object property to be displayed.
  
 The value of the Property parameter can also be a calculated property:
@@ -23,21 +24,21 @@ The value of the Property parameter can also be a calculated property:
 - a script block: `{<scriptblock>}`
  
 Property parameter is optional. However, if omitted for objects with properties, no comprehensible data output will be produced.
-### ColumnCount
+##### ColumnCount
 Number of columns to display (CustomSize mode). If ColumnCount parameter is omitted the number of columns is calculated automatically (AutoSize mode).
-### MaxColumnCount
+##### MaxColumnCount
 Maximum number of columns to display in AutoSize mode. Optional. Cannot be combined with ColumnCount parameter.
-### MinRowCount
+##### MinRowCount
 Minimum number of rows to display in AutoSize mode. Optional. Cannot be combined with ColumnCount parameter.
-### OrderBy
+##### OrderBy
 Determines data order in column output. Default value is Column.
 
 Valid values are:
 - Column: Orders data by column.
 - Row: Orders data by row.
-### InputObject
+##### InputObject
 Object to format for display. Accepts pipeline input.
-## Usage examples
+#### Usage examples
 1. `1..150 | Format-Column -OrderBy Row`
 2. `Format-Column -ColumnCount 3 -InputObject @(1..130)`
 3. `Get-Process | Format-Column -Property @{Expression='Handles'; FormatString='{0:00000}'} -MinRowCount 15`
