@@ -55,9 +55,9 @@ Object to format for display. Accepts pipeline input.
 The following Property syntaxes are all equivalent:
 - name (string):
     - `Get-Process | Format-Column -Property ProcessName`
-- scriptblock:
+- script block:
     - `Get-Process | Format-Column -Property {$_.ProcessName}`
-- hashtable string expression:
+- hash table string expression:
     - `Get-Process | Format-Column -Property @{Expression='ProcessName'}`
-- hashtable scriptblock expression:
+- hash table script block expression:
     - `Get-Process | Format-Column -Property @{Expression={$_.ProcessName}}`
