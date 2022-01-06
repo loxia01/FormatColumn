@@ -12,6 +12,7 @@ Name the new module folder exactly as the `.psm1` file, in this case `PSFormatCo
 #### Syntax
 
 `Format-Column [[-Property] <Object>] [-MaxColumnCount <int>] [-MinRowCount <int>] [-OrderBy <string>]`
+
     `[-InputObject <psobject>] [<CommonParameters>]`
 
 
