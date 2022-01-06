@@ -1,14 +1,12 @@
 # PSFormatColumn
-
 PSFormatColumn module contains the function Format-Column that formats input object data as columns.
-
 ## Installation
-Download the PS Module file (.psm1) and then copy it to your PSModulePath. Default PSModulePath is:
+Download the module file (`.psm1`) and then create a new module folder in your `PSModulePath`. Default `PSModulePath` is:
 
-- for a specific user: `$Env:USERPROFILE\Documents\WindowsPowerShell\Modules\<Module Folder>\<Module Files>`
-- for all users: `$Env:ProgramFiles\WindowsPowerShell\Modules\<Module Folder>\<Module Files>`
+- for a specific user: `$Env:UserProfile\Documents\WindowsPowerShell\Modules\`
+- for all users: `$Env:ProgramFiles\WindowsPowerShell\Modules\`
 
-Name the `<Module Folder>` exactly as the psm1 file, in this case `PSFormatColumn`. PowerShell will now automatically find the module and its functions.
+Name the new module folder exactly as the `.psm1` file, in this case `PSFormatColumn` and then copy the downloaded module file to that folder. PowerShell will now automatically find the module and its functions.
 ## Functions
 ### Format-Column
 #### Syntax
