@@ -45,13 +45,14 @@ Valid values are:
 ##### InputObject
 Object to format for display. Accepts pipeline input.
 #### Usage examples
-1. `1..150 | Format-Column -OrderBy Row`
-2. 
-3. `Format-Column -ColumnCount 3 -InputObject @(1..130)`
-4. 
-5. `Get-Process | Format-Column -Property @{Expression='Handles'; FormatString='{0:00000}'} -MinRowCount 15`
-6. 
-7. The following Property syntaxes are all equivalent:
+##### Example 1
+`1..150 | Format-Column -OrderBy Row`
+##### Example 2 
+`Format-Column -ColumnCount 3 -InputObject @(1..130)`
+##### Example 3
+`Get-Process | Format-Column -Property @{Expression='Handles'; FormatString='{0:00000}'} -MinRowCount 15`
+##### Example 4
+`# The following Property syntaxes are all equivalent:`
    - `Get-Process | Format-Column -Property ProcessName`
    - `Get-Process | Format-Column -Property {$_.ProcessName}`
    - `Get-Process | Format-Column -Property @{Expression='ProcessName'}`
