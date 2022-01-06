@@ -53,7 +53,7 @@ Object to format for display. Accepts pipeline input.
 `Get-Process | Format-Column -Property @{Expression='Handles'; FormatString='{0:00000}'} -MinRowCount 15`
 ##### Example 4
 The following Property syntaxes are all equivalent:
-- name (string)&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; : `Get-Process | Format-Column -Property ProcessName`
+- name (string)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp`Get-Process | Format-Column -Property ProcessName`
 - scriptblock                      : `Get-Process | Format-Column -Property {$_.ProcessName}`
 - hashtable string expression      : `Get-Process | Format-Column -Property @{Expression='ProcessName'}`
 - hashtable scriptblock expression : `Get-Process | Format-Column -Property @{Expression={$_.ProcessName}}`
