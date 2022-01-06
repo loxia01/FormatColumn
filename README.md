@@ -56,4 +56,4 @@ The following Property syntaxes are all equivalent:
 - name (string)&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; : `Get-Process | Format-Column -Property ProcessName`
 - scriptblock&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;: `Get-Process | Format-Column -Property {$_.ProcessName}`
 - hashtable string expression&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;: &nbsp `Get-Process | Format-Column -Property @{Expression='ProcessName'}`
-- hashtable scriptblock expression : `Get-Process | Format-Column -Property @{Expression={$_.ProcessName}}`
+- hashtable scriptblock expression&nbsp;: `Get-Process | Format-Column -Property @{Expression={$_.ProcessName}}`
