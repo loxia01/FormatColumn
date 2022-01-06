@@ -15,7 +15,7 @@ Format-Column [[-Property] <Object>] [-MaxColumnCount <Int>] [-MinRowCount <Int>
     [-InputObject <PSObject>] [<CommonParameters>]
 ```
 ```
-Format-Column [[-Property] <object>] -ColumnCount <int> [-OrderBy <string>]
+Format-Column [[-Property] <Object>] -ColumnCount <Int> [-OrderBy <String>]
     [-InputObject <PSObject>] [<CommonParameters>]
 ```
 #### Description
