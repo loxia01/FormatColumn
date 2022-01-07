@@ -49,10 +49,10 @@ function Format-Column {
  1..150 | Format-Column -OrderBy Row
  
 .EXAMPLE
- Format-Column -ColumnCount 3 -InputObject @(1..130)
+ Format-Column -ColumnCount 3 -MinRowCount 15 -InputObject @(1..130)
  
 .EXAMPLE
- Get-Process | Format-Column -Property @{Expression='Handles'; FormatString='{0:00000}'} -MinRowCount 15
+ Get-Process | Format-Column -Property @{Expression='Handles'; FormatString='{0:00000}'}
  
 .EXAMPLE
  # In these examples the Property parameter values are all equivalent:
