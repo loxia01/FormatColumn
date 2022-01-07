@@ -46,10 +46,10 @@ function Format-Column {
  Object to format for display. Accepts pipeline input.
  
 .EXAMPLE
- 1..150 | Format-Column -OrderBy Row
+ 1..150 | Format-Column -MinRowCount 15 -OrderBy Row
  
 .EXAMPLE
- Format-Column -ColumnCount 3 -MinRowCount 15 -InputObject @(1..130)
+ Format-Column -ColumnCount 3 -InputObject @(1..130)
  
 .EXAMPLE
  Get-Process | Format-Column -Property @{Expression='Handles'; FormatString='{0:00000}'}
