@@ -1,4 +1,5 @@
 function Format-Column {
+
 <#
 .SYNOPSIS
  Format-Column formats input object data as columns.
