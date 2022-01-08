@@ -39,8 +39,8 @@ function Format-Column {
  Determines data order in column output. Default value is Column.
  
  Valid values are:
- - Column: Orders data by column.
- - Row: Orders data by row.
+ - Column: Orders data column by column.
+ - Row: Orders data row by row.
  
 .PARAMETER InputObject
  Object to format for display. Accepts pipeline input.
