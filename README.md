@@ -1,5 +1,5 @@
 # FormatColumn
-FormatColumn module contains the function Format-Column that formats input object data as columns.
+FormatColumn module contains the function Format-Column that formats input object data as columns ordering data by column as default.
 ## Installation
 Download the module file (`.psm1`) and then create a new module folder in your `PSModulePath`. Default `PSModulePath` is:
 
