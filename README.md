@@ -1,12 +1,12 @@
-# PSFormatColumn
-PSFormatColumn module contains the function Format-Column that formats input object data as columns.
+# FormatColumn
+FormatColumn module contains the function Format-Column that formats input object data as columns.
 ## Installation
 Download the module file (`.psm1`) and then create a new module folder in your `PSModulePath`. Default `PSModulePath` is:
 
 - for a specific user: `$Env:UserProfile\Documents\WindowsPowerShell\Modules\`
 - for all users: `$Env:ProgramFiles\WindowsPowerShell\Modules\`
 
-Name the new module folder exactly as the `.psm1` file, in this case `PSFormatColumn` and then copy the downloaded module file to that folder. PowerShell will now automatically find the module and its functions.
+Name the new module folder exactly as the `.psm1` file, in this case `FormatColumn` and then copy the downloaded module file to that folder. PowerShell will now automatically find the module and its functions.
 ## Functions
 ### Format-Column
 #### Syntax
@@ -27,6 +27,7 @@ Name of object property to be displayed.
 The value of the Property parameter can also be a calculated property:
 - a hash table in the form of:
     - `@{Expression = <string>|{<scriptblock>}}`
+    - `@{FormatString = <string>}`
     - `@{Expression = <string>|{<scriptblock>}; FormatString = <string>}`
 - a script block: `{<scriptblock>}`
  
@@ -47,18 +48,18 @@ Valid values are:
 Object to format for display. Accepts pipeline input.
 #### Usage examples
 ##### Example 1
-`1..150 | Format-Column -MinRowCount 15 -OrderBy Row`
+`1..100 | Format-Column -MinRowCount 20 -OrderBy Row`
 ##### Example 2 
-`Format-Column -ColumnCount 3 -InputObject @(1..130)`
+`Format-Column -Property @{FormatString='{0:000}'} -ColumnCount 3 -InputObject @(1..125)`
 ##### Example 3
-`Get-Process | Format-Column -Property @{Expression='Handles'; FormatString='{0:00000}'}`
+`Get-Process | Format-Column -Property @{Expr='Id'; FormatStr='{0:00000}'}`
 ##### Example 4
 The following Property syntaxes are all equivalent:
 - name (string):
     - `Get-Process | Format-Column -Property ProcessName`
-- script block:
+- scriptblock:
     - `Get-Process | Format-Column -Property {$_.ProcessName}`
-- hash table string expression:
+- hashtable string expression:
     - `Get-Process | Format-Column -Property @{Expression='ProcessName'}`
-- hash table script block expression:
+- hashtable scriptblock expression:
     - `Get-Process | Format-Column -Property @{Expression={$_.ProcessName}}`
