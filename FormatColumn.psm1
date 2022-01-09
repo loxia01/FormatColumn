@@ -170,7 +170,7 @@ function Format-Column {
         "{${column},$(-($columnWidth + $gutterWidth))}"
     }) -join ''
     
-    # Output data ordered by column or by row.
+    # Output data ordered column by column or row by row.
     Write-Output "`n"
     1..$rowCount | ForEach-Object {
         $row = $_ - 1
