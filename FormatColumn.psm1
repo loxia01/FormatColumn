@@ -1,5 +1,4 @@
 function Format-Column {
-
 <#
 .SYNOPSIS
  Format-Column formats object data as columns, ordering data column by column as default.
