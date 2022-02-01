@@ -65,7 +65,6 @@ function Format-Column
 #>
     
     [CmdletBinding(DefaultParameterSetName='AutoSize')]
-    [Alias('fcol')]
     param(
         [Parameter(Position=0)]
         [Object]$Property,
