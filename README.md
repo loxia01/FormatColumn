@@ -7,6 +7,8 @@ Download the module file (`.psm1`) and then create a new module folder in your `
 - for all users: `%ProgramFiles%\WindowsPowerShell\Modules\`
 
 Name the new module folder exactly as the `.psm1` file, in this case `FormatColumn` and then copy the downloaded module file to that folder. PowerShell will now automatically find the module and its functions.
+
+To be able to use the function alias ('fcol') it is also necessary to issue the command `Import-Module -Name FormatColumn` at the PowerShell command prompt.
 ## Functions
 ### Format-Column
 #### Syntax
