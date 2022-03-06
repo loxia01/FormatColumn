@@ -188,7 +188,7 @@ function Format-Column
     }) -join ''
     
     # Output data ordered column by column or row by row.
-    Write-Output "`n", (
+    Write-Output "`n" (
         1..$rowCount | ForEach-Object {
             $row = $_ - 1
             $lineContent = 1..$ColumnCount | ForEach-Object {
@@ -198,5 +198,5 @@ function Format-Column
             }
             $format -f $lineContent
         }
-    ), "`n"
+    ) "`n"
 }
