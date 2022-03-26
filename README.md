@@ -3,7 +3,7 @@ FormatColumn module contains the function Format-Column that formats object data
 ## Installation
 Download the module file (`.psm1`) and then create a new module folder in your `PSModulePath`. Default `PSModulePath` is:
 
-- for a specific user: `%USERPROFILE%\Documents\WindowsPowerShell\Modules\`
+- for a specific user: `%UserProfile%\Documents\WindowsPowerShell\Modules\`
 - for all users: `%ProgramFiles%\WindowsPowerShell\Modules\`
 
 Name the new module folder exactly as the `.psm1` file, in this case `FormatColumn` and then copy the downloaded module file to that folder. PowerShell will now automatically find the module and its functions.
