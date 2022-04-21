@@ -11,9 +11,9 @@ Name the new module folder exactly as the `.psm1` file, in this case `FormatColu
 ### Format-Column
 #### Syntax
 ```
-Format-Column [[-Property] <object>] [-MaxColumnCount <int>] [-MinRowCount <int>] [-OrderBy <string>] [-InputObject <object>] [<CommonParameters>]
+Format-Column [[-Property] <Object>] [-MaxColumnCount <Int>] [-MinRowCount <Int>] [-OrderBy <String>] [-InputObject <Object>] [<CommonParameters>]
 
-Format-Column [[-Property] <object>] -ColumnCount <int> [-OrderBy <string>] [-InputObject <object>] [<CommonParameters>]
+Format-Column [[-Property] <Object>] -ColumnCount <Int> [-OrderBy <String>] [-InputObject <Object>] [<CommonParameters>]
 ```
 #### Description
 Format-Column outputs object data into columns, similarly to built-in cmdlet Format-Wide. It can order output data column by column in addition to row by row, as is the only option in Format-Wide. Format-Column also performs some initial input data processing which makes it easy to input objects without properties e.g. plain arrays.
@@ -23,10 +23,10 @@ Name of object property to be displayed.
  
 The value of the Property parameter can also be a calculated property:
 - a hash table in the form of:
-    - `@{Expression=<string>|{<scriptblock>}}`
-    - `@{FormatString=<string>}`
-    - `@{Expression=<string>|{<scriptblock>};FormatString=<string>}`
-- a script block: `{<scriptblock>}`
+    - `@{Expression=<String>|{<ScriptBlock>}}`
+    - `@{FormatString=<String>}`
+    - `@{Expression=<String>|{<ScriptBlock>};FormatString=<String>}`
+- a script block: `{<ScriptBlock>}`
  
 Property parameter is optional. However, if omitted for objects with properties, no comprehensible data output will be produced.
 ##### ColumnCount
