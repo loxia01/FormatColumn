@@ -198,5 +198,5 @@ function Format-Column
             }
             $format -f $lineContent
         }
-    ) "`n" 2>$null
+    ) "`n" 2>&1 $null
 }
