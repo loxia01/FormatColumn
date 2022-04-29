@@ -29,5 +29,5 @@ FOR /F "tokens=1 delims=," %%I IN ('SCHTASKS /Query /Fo CSV /TN MEGA\ 2^>NUL ^| 
 IF %$disable%==1 (
     ECHO;
     ECHO;
-    PAUSE
+    PAUSE 2>&1
 )
