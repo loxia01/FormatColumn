@@ -23,10 +23,10 @@ Name of object property to be displayed.
  
 The value of the Property parameter can also be a calculated property:
 - a hash table in the form of:
-    - `@{Expression=<String>|{<ScriptBlock>}}`
-    - `@{FormatString=<String>}`
-    - `@{Expression=<String>|{<ScriptBlock>};FormatString=<String>}`
-- a script block: `{<ScriptBlock>}`
+    - `@{Expression=<string>|{<scriptblock>}}`
+    - `@{FormatString=<string>}`
+    - `@{Expression=<string>|{<scriptblock>}; FormatString=<string>}`
+- a script block: `{<scriptblock>}`
  
 Property parameter is optional. However, if omitted for objects with properties, no comprehensible data output will be produced.
 ##### ColumnCount
@@ -49,7 +49,7 @@ Object to format for display. Accepts pipeline input.
 ##### Example 2 
 `Format-Column -Property @{FormatString='{0:000}'} -ColumnCount 3 -InputObject @(1..125)`
 ##### Example 3
-`Get-Process | Format-Column -Property @{Expr='Id';FormatStr='{0:00000}'}`
+`Get-Process | Format-Column -Property @{Expr='Id'; FormatStr='{0:00000}'}`
 ##### Example 4
 The following Property syntaxes are all equivalent:
 - name (string):
