@@ -1,0 +1,82 @@
+/*** WEB CONTENT ***/
+
+/** General **/
+
+/* Hide native focus outline */
+*:focus { outline: none; }
+
+/** Dropdown Selection Fields **/
+
+@media (prefers-color-scheme: light) {
+  select {
+    -moz-appearance: none;
+    background-color: white;
+    background-image: url("chrome://global/skin/icons/arrow-down-12.svg");
+    background-repeat: no-repeat;
+    background-position: right 4px center;
+    border: 1px solid color-mix(in srgb, currentColor 41%, transparent);
+    border-radius: 4px;
+    padding: 2px 19px 2px 1px;
+  }
+  select:hover { background-color: #e0e0e6; } /* Highlight on hover */
+  select:focus { background-color: white; } /* No highlight when expanded */
+  option { background-color: white; } /* Expanded options list */
+}
+
+/* Domain-specific adjustments */
+@-moz-document domain("psl.noaa.gov") {
+  select { padding: 0px 19px 0px 1px !important; }
+}
+
+
+/*** FIREFOX SETTINGS PAGES ***/
+
+@-moz-document regexp("^(?:about:|chrome:).+") {
+  /** General **/
+  
+  /* Reduce vertical spacing in context menu */
+  menupopup:not(.in-menulist) > menuitem,
+  menupopup:not(.in-menulist) > menu {
+    padding-block: 3px !important;
+    min-height: unset !important;
+  }
+
+  /* Set/hide focus outline */
+  *:focus {
+    outline-width: 1px !important;
+    outline-color: color-mix(in srgb, currentColor 70%, transparent) !important;
+  }
+  radio[focused] > .radio-check { outline: none !important; }
+  
+  /* Set background color for unchecked checkboxes and radio buttons */
+  @media (prefers-color-scheme: light) {
+    checkbox:not([disabled], :hover) > .checkbox-check:not([checked]),
+    radio:not([disabled], [focused], :hover) > .radio-check,
+    input[type="checkbox"]:enabled:not(:checked, :hover),
+    input[type="radio"]:enabled:not(:checked, :hover) {
+      background-color: var(--input-bgcolor, rgb(255, 255, 255)) !important;
+    }
+  }
+  @media (prefers-color-scheme: dark) {
+    checkbox:not([disabled], :hover) > .checkbox-check:not([checked]),
+    radio:not([disabled], [focused], :hover) > .radio-check,
+    input[type="checkbox"]:enabled:not(:checked, :hover),
+    input[type="radio"]:enabled:not(:checked, :hover) {
+      background-color: var(--toolbar-field-background-color, rgb(28, 27, 34)) !important;
+    }
+  }
+  
+  /** Downloads Page (about:downloads) **/
+  
+  /* Change download folder icon */
+  @media (prefers-color-scheme: light) {
+    .downloadIconShow .button-icon {
+        list-style-image: url("./Other_icons/explorer-standard-folder.png") !important;
+    }
+  }
+  @media (prefers-color-scheme: dark) {
+    .downloadIconShow .button-icon {
+        list-style-image: url("./Other_icons/explorer-new-standard-folder.png") !important;
+    }
+  }
+}
