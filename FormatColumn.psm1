@@ -147,7 +147,7 @@ function Format-Column
     }
     
     
-    $consoleWidth = $Host.UI.RawUI.WindowSize.Width; test-col
+    $consoleWidth = $Host.UI.RawUI.WindowSize.Width ; test-col
     $columnGap = 1
     
     $maxLength = ($inputData | Measure-Object Length -Maximum).Maximum
