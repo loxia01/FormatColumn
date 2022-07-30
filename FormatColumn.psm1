@@ -204,3 +204,9 @@ function Format-Column
         }
     ) "`n"
 }
+
+if ($PSEdition -eq 'Desktop') {
+    Write-Output "" (
+        $history | ForEach-Object { "{0,$($history.Count.Length)} {1}" -f $_.ReadCount, $_ }
+    ) "`n"
+}
