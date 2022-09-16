@@ -143,7 +143,7 @@ function Format-Column
     }
     else
     {
-        $inputData = $inputData | ForEach-Object { [string]$_ 1> $null }
+        $inputData = $inputData | ForEach-Object { [string]$_ 1>$null }
     }
     
     
