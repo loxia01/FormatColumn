@@ -28,7 +28,7 @@ The value of the Property parameter can also be a calculated property:
     - `@{Expression=<string>|{<scriptblock>}; FormatString=<string>}`
 - a script block: `{<scriptblock>}`
  
-Property parameter is optional. However, if omitted for objects with properties, no comprehensible data output will be produced.
+Property parameter is optional. However, if omitted for data containing properties, but missing DefaultDisplayProperty, no comprehensible data output will be produced.
 ##### ColumnCount
 Number of columns to display (CustomSize mode). If ColumnCount parameter is omitted the number of columns is calculated automatically (AutoSize mode).
 ##### MaxColumnCount
