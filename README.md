@@ -24,7 +24,7 @@ Format-Column [[-Property] <Object>] -ColumnCount <int> [-OrderBy <string>] [-In
 #### Description
 `Format-Column` outputs object data into columns, similarly to built-in cmdlet `Format-Wide`. It can order output data column by column in addition to row by row, as is the only option in `Format-Wide`. `Format-Column` also performs some initial input data processing which makes it easy to input objects without properties e.g. plain arrays.
 #### Parameters
-##### Property
+##### **-Property**
 Name of object property to be displayed.
  
 The value of the **Property** parameter can also be a calculated property:
