@@ -27,26 +27,26 @@ Format-Column outputs object data into columns, similarly to built-in cmdlet For
 ##### Property
 Name of object property to be displayed.
  
-The value of the Property parameter can also be a calculated property:
+The value of the **Property** parameter can also be a calculated property:
 - a hash table in the form of:
     - `@{Expression=<string>|{<scriptblock>}}`
     - `@{FormatString=<string>}`
     - `@{Expression=<string>|{<scriptblock>}; FormatString=<string>}`
 - a script block: `{<scriptblock>}`
  
-Property parameter is optional. However, if omitted for data containing properties, but missing DefaultDisplayProperty, no comprehensible data output will be produced.
+**Property** parameter is optional. However, if omitted for data containing properties, but missing DefaultDisplayProperty, no comprehensible data output will be produced.
 ##### ColumnCount
-Number of columns to display (CustomSize mode). If ColumnCount parameter is omitted the number of columns is calculated automatically (AutoSize mode).
+Number of columns to display (CustomSize mode). If **ColumnCount** parameter is omitted the number of columns is calculated automatically (AutoSize mode).
 ##### MaxColumnCount
-Maximum number of columns to display in AutoSize mode. Optional. Cannot be combined with ColumnCount parameter.
+Maximum number of columns to display in AutoSize mode. Optional. Cannot be combined with **ColumnCount** parameter.
 ##### MinRowCount
-Minimum number of rows to display in AutoSize mode. Optional. Cannot be combined with ColumnCount parameter.
+Minimum number of rows to display in AutoSize mode. Optional. Cannot be combined with **ColumnCount** parameter.
 ##### OrderBy
-Determines data order in column output. Default value is Column.
+Determines data order in column output. Default value is `Column`.
 
 Valid values are:
-- Column: Orders data column by column.
-- Row: Orders data row by row.
+- `Column`: Orders data column by column.
+- `Row`: Orders data row by row.
 ##### InputObject
 Object to format for display. Accepts pipeline input.
 #### Usage examples
