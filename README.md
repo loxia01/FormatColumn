@@ -13,7 +13,7 @@ Download the module files (extensions `.psm1` and `.psd1`) and then create a new
 - for all users: `%ProgramFiles%\WindowsPowerShell\Modules\`
 
 Name the new module folder exactly as the filename without extension, in this case `FormatColumn` and then copy the downloaded module file to that folder. PowerShell will now automatically find the module and its functions.
-## Format-Column
+## Function: Format-Column
 ### Syntax
 ```
 Format-Column [[-Property] <Object>] [-MaxColumnCount <int>] [-MinRowCount <int>] [-OrderBy <string>] [-InputObject <Object>] [<CommonParameters>]
