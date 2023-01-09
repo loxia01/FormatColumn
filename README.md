@@ -22,7 +22,7 @@ Format-Column [[-Property] <Object>] [-MaxColumnCount <int>] [-MinRowCount <int>
 Format-Column [[-Property] <Object>] -ColumnCount <int> [-OrderBy <string>] [-InputObject <Object>] [<CommonParameters>]
 ```
 #### Description
-Format-Column outputs object data into columns, similarly to built-in cmdlet Format-Wide. It can order output data column by column in addition to row by row, as is the only option in Format-Wide. Format-Column also performs some initial input data processing which makes it easy to input objects without properties e.g. plain arrays.
+`Format-Column` outputs object data into columns, similarly to built-in cmdlet `Format-Wide`. It can order output data column by column in addition to row by row, as is the only option in `Format-Wide`. `Format-Column` also performs some initial input data processing which makes it easy to input objects without properties e.g. plain arrays.
 #### Parameters
 ##### Property
 Name of object property to be displayed.
