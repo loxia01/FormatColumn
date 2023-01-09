@@ -66,3 +66,6 @@ The following Property syntaxes are all equivalent:
     - `Get-Process | Format-Column -Property @{Expr='ProcessName'}`
 - hashtable scriptblock expression:
     - `Get-Process | Format-Column -Property @{Expr={$_.ProcessName}}`
+
+#### Notes
+Included alias for Format-Column is 'fcol'.
