@@ -92,8 +92,9 @@ function Format-Column
         [ValidateScript({$_ -gt 0})]
         [int]$MinRowCount,
         
+        [Parameter()]
         [ValidateSet('Column','Row')]
-        [string]$OrderBy='Column',
+        [string]$OrderBy = 'Column',
         
         [Parameter(ValueFromPipeline)]
         [Object]$InputObject
@@ -218,7 +219,7 @@ function Format-Column
     ) -join ""
     
     # Output data ordered column by column or row by row, adding blank line(s) at top and bottom.
-    if ($PSEdition -eq 'Desktop') { Write-Output "","" }
+    if ($PSEdition -eq 'Desktop') { Write-Output "`n" }
     else                          { Write-Output "" }
     0..($rowCount - 1) | ForEach-Object {
         $row = $_
@@ -229,6 +230,6 @@ function Format-Column
         }
         Write-Output ($formatString -f $lineContent)
     }
-    if ($PSEdition -eq 'Desktop') { Write-Output "","" }
+    if ($PSEdition -eq 'Desktop') { Write-Output "`n" }
     else                          { Write-Output "" }
 }
