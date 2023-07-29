@@ -28,9 +28,9 @@ Name of object property to be displayed.
  
 The value of the **Property** parameter can also be a calculated property:
 - a hash table in the form of:
-    - `@{Expression = <string>|{<scriptblock>}}`
-    - `@{FormatString = <string>}`
-    - `@{Expression = <string>|{<scriptblock>}; FormatString = <string>}`
+    - `@{Expression=<string>|{<scriptblock>}}`
+    - `@{FormatString=<string>}`
+    - `@{Expression=<string>|{<scriptblock>}; FormatString=<string>}`
 - a script block: `{<scriptblock>}`
  
 **Property** parameter is optional. However, if omitted for data containing properties, but missing DefaultDisplayProperty, no comprehensible data output will be produced.
