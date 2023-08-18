@@ -16,9 +16,9 @@ Name the new module folder exactly as the filename without extension, in this ca
 ## Function: Format-Column
 ### Syntax
 ```
-Format-Column [[-Property] <Object>] [-MaxColumnCount <int>] [-MinRowCount <int>] [-OrderBy <string>] [-InputObject <Object>] [<CommonParameters>]
+Format-Column [[-Property] <Object>] [-MaxColumnCount <int>] [-MinRowCount <int>] [-GroupBy <Object>] [-OrderBy <string>] [-InputObject <Object>] [<CommonParameters>]
 
-Format-Column [[-Property] <Object>] -ColumnCount <int> [-OrderBy <string>] [-InputObject <Object>] [<CommonParameters>]
+Format-Column [[-Property] <Object>] -ColumnCount <int> [-GroupBy <Object>] [-OrderBy <string>] [-InputObject <Object>] [<CommonParameters>]
 ```
 ### Description
 `Format-Column` outputs object data into columns, similarly to built-in cmdlet `Format-Wide`. It can order output data column by column in addition to row by row, as is the only option in `Format-Wide`. `Format-Column` also performs some initial input data processing which makes it easy to input objects without properties e.g. plain arrays.
@@ -40,6 +40,14 @@ Number of columns to display (CustomSize mode). If **ColumnCount** parameter is 
 Maximum number of columns to display in AutoSize mode. Optional. Cannot be combined with **ColumnCount** parameter.
 #### -MinRowCount
 Minimum number of rows to display in AutoSize mode. Optional. Cannot be combined with **ColumnCount** parameter.
+#### -GroupBy
+Formats the output in groups based on a shared property or value. Optional. Can be the name of a property or an expression (hash table or script block):
+ - a hash table. Valid syntaxes are:
+     - `@{Expression=<string>|{<scriptblock>}}`
+     - `@{Label/Name=<string>; Expression=<string>|{<scriptblock>}}`
+     - `@{Label/Name=<string>; Expression=<string>|{<scriptblock>}; FormatString=<string>}`
+ 
+ - a script block: `{<scriptblock>}`
 #### -OrderBy
 Determines data order in column output. Default value is `Column`.
 
