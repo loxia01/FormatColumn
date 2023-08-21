@@ -139,46 +139,36 @@ function Format-Column
                 
                 if ($expr -is [string])
                 {
-                    if ($formatStr)
+                    if ($formatStr) { $sb = { $formatStr -f $_.$expr } }
+                    else            { $sb = { $_.$expr } }
+                    
+                    $filterSB = [scriptblock]::Create("([string](${sb})) -eq `$grVal")
+                    foreach ($grVal in (($inputData | Group-Object $sb).Name | Sort-Object))
                     {
-                        $sb = { $formatStr -f $_.$expr }
-                        $inputData | ForEach-Object $sb | Sort-Object -Unique | ForEach-Object {
-                            $filterSB = [scriptblock]::Create("($($sb.ToString())) -eq ""$_""")
-                            New-Variable -Name inputData_$_ -Value ($inputData | Where-Object $filterSB)
-                        }
-                        trap { Write-Error "GroupBy formatstring processing error." -Category 5 -EA 1 }
+                        New-Variable -Name ("inputData_" + "{0:00}" -f $i) -Value $inputData.Where($filterSB)
+                        New-Variable -Name ("groupValue_" + "{0:00}" -f $i++) -Value $grVal
                     }
-                    else
-                    {
-                        $inputData | ForEach-Object $_.$expr | Sort-Object -Unique | ForEach-Object {
-                            New-Variable -Name inputData_$_ -Value ($inputData | Where-Object $expr -EQ $_)
-                        }
-                    }
+                    trap { Write-Error "GroupBy formatstring processing error." -Category 5 -EA 1 }
+                    
                     if (-not $label)
                     {
-                        if (-not ($groupLabel = $inputData[0].PSObject.Properties.Name.Where({$_ -eq $GroupBy}))) { $groupLabel = $GroupBy }
+                        if (-not ($groupLabel = $inputData[0].PSObject.Properties.Name.Where({$_ -eq $expr}))) { $groupLabel = $expr }
                     }
                 }
                 elseif ($expr -is [scriptblock])
                 {
-                    if ($formatStr)
+                    if ($formatStr) { $sb = [scriptblock]::Create("'${formatStr}' -f $expr") }
+                    else            { $sb = $expr }
+                    
+                    $filterSB = [scriptblock]::Create("([string](${sb})) -eq `$grVal")
+                    foreach ($grVal in (($inputData | Group-Object $sb).Name | Sort-Object))
                     {
-                        $sb = [scriptblock]::Create("""$formatStr"" -f $($expr.ToString())")
-                        $inputData | ForEach-Object $sb | Sort-Object -Unique | ForEach-Object {
-                            $filterSB = [scriptblock]::Create("($($sb.ToString())) -eq ""$_""")
-                            New-Variable -Name inputData_$_ -Value ($inputData | Where-Object $filterSB)
-                        }
-                        trap { Write-Error "GroupBy processing error." -Category 5 -EA 1 }
+                        New-Variable -Name ("inputData_" + "{0:00}" -f $i) -Value $inputData.Where($filterSB)
+                        New-Variable -Name ("groupValue_" + "{0:00}" -f $i++) -Value $grVal
                     }
-                    else
-                    {
-                        $inputData | ForEach-Object $expr | Sort-Object -Unique | ForEach-Object {
-                            $filterSB = [scriptblock]::Create("($($expr.ToString())) -eq ""$_""")
-                            New-Variable -Name inputData_$_ -Value ($inputData | Where-Object $filterSB)
-                        }
-                        trap { Write-Error "GroupBy expression processing error." -Category 5 -EA 1 }
-                    }
-                    if (-not $label) { $groupLabel = $expr.ToString() }
+                    trap { Write-Error "GroupBy processing error." -Category 5 -EA 1 }
+                    
+                    if (-not $label) { $groupLabel = $expr }
                 }
                 else { Write-Error "Invalid GroupBy expression type." -Category 5 -EA 1 }
             }
@@ -186,17 +176,22 @@ function Format-Column
         }
         elseif ($GroupBy -is [scriptblock])
         {
-            $inputData | ForEach-Object $GroupBy | Sort-Object -Unique | ForEach-Object {
-                $filterSB = [scriptblock]::Create("($($GroupBy.ToString())) -eq ""$_""")
-                New-Variable inputData_$_ -Value ($inputData | Where-Object $filterSB)
+            $filterSB = [scriptblock]::Create("([string](${GroupBy})) -eq `$grVal")
+            foreach ($grVal in (($inputData | Group-Object $GroupBy).Name | Sort-Object))
+            {
+                New-Variable -Name ("inputData_" + "{0:00}" -f $i) -Value $inputData.Where($filterSB)
+                New-Variable -Name ("groupValue_" + "{0:00}" -f $i++) -Value $grVal
             }
             trap { Write-Error "GroupBy processing error." -Category 5 -EA 1 }
-            $groupLabel = $GroupBy.ToString()
+            
+            $groupLabel = $GroupBy
         }
         elseif ($GroupBy -is [string])
         {
-            $inputData.$GroupBy | Sort-Object -Unique | ForEach-Object {
-                New-Variable -Name inputData_$_ -Value ($inputData | Where-Object $GroupBy -EQ $_)
+            foreach ($grVal in (($inputData | Group-Object $GroupBy).Name | Sort-Object))
+            {
+                New-Variable -Name ("inputData_" + "{0:00}" -f $i) -Value $inputData.Where({[string]$_.$GroupBy -eq $grVal})
+                New-Variable -Name ("groupValue_" + "{0:00}" -f $i++) -Value $grVal
             }
             if (-not ($groupLabel = $inputData[0].PSObject.Properties.Name.Where({$_ -eq $GroupBy}))) { $groupLabel = $GroupBy }
         }
@@ -206,6 +201,7 @@ function Format-Column
         if ($inputDataVbs = Get-Variable -Name inputData_*)
         {
             Remove-Variable inputData
+            $groupValueVbs = Get-Variable -Name groupValue_*
             
             # Property parameter validation and processing
             if ($null -ne $Property)
@@ -329,8 +325,9 @@ function Format-Column
                 
                 # Output data ordered column by column or row by row, adding empty line(s) before and after.
                 
+                # Output group label and value
                 if ($PSEdition -eq 'Desktop') { Write-Output "" }
-                Write-Output "`n   ${groupLabel}: $($inputDataVb.Name -replace '^inputData_')`n" # Add grouping label
+                Write-Output "`n   ${groupLabel}: $($groupValueVbs[$j++].Value)`n"
                 if ($PSEdition -eq 'Desktop') { Write-Output "" }
                 
                 0..($rowCount - 1) | ForEach-Object {
