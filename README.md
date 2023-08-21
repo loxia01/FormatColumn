@@ -9,8 +9,8 @@ or manually downloaded here on GitHub:
 
 Download the module files (extensions `.psm1` and `.psd1`) and then create a new module folder in your `PSModulePath`. Default `PSModulePath` is:
 
-- for a specific user: `%UserProfile%\Documents\WindowsPowerShell\Modules\`
-- for all users: `%ProgramFiles%\WindowsPowerShell\Modules\`
+- for a specific user: `%UserProfile%\Documents\WindowsPowerShell\Modules`
+- for all users: `%ProgramFiles%\WindowsPowerShell\Modules`
 
 Name the new module folder exactly as the filename without extension, in this case `FormatColumn` and then copy the downloaded module file to that folder. PowerShell will now automatically find the module and its functions.
 ## Function: Format-Column
