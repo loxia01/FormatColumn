@@ -117,317 +117,141 @@ function Format-Column
     if ($null -ne $InputObject) { $inputData = $InputObject }
     else { return }
     
-    if ($null -ne $GroupBy)
+    # Property and GroupBy validation and processing
+    
+    if ($null -ne $Property)
     {
-        # GroupBy parameter validation and processing
+        if ($Property -is [hashtable])
+        {
+            $Property.Keys | ForEach-Object {
+                if     ($_ -match '^ex?p?r?e?s?s?i?o?n?$')     { $pExpr = $Property.$_ }
+                elseif ($_ -match '^fo?r?m?a?t?s?t?r?i?n?g?$') { $pFormatStr = $Property.$_ }
+                else { Write-Error "Invalid Property key '${_}'." -Category 5 -EA 1 }
+            }
+            if ($pExpr)
+            {
+                if ($pFormatStr)
+                {
+                    if ($pFormatStr -isnot [string]) { Write-Error "Invalid Property formatstring type." -Category 5 -EA 1 }
+                    
+                    if     ($pExpr -is [string])      { $propertySelect = {$pFormatStr -f $_.$pExpr} }
+                    elseif ($pExpr -is [scriptblock]) { $propertySelect = [scriptblock]::Create("'${pFormatStr}' -f $pExpr") }
+                    else { Write-Error "Invalid Property expression type." -Category 5 -EA 1 }
+                }
+                else
+                {
+                    if ($pExpr -is [string] -or $pExpr -is [scriptblock]) { $propertySelect = $pExpr }
+                    else { Write-Error "Invalid Property expression type." -Category 5 -EA 1 }
+                }
+            }
+            else { Write-Error "Property hash table is missing mandatory expression entry." -Category 5 -EA 1 }
+        }
+        elseif ($Property -is [string] -or $Property -is [scriptblock]) { $propertySelect = $Property }
+        else { Write-Error "Invalid Property type." -Category 5 -EA 1 }
+    }
+    else
+    {
+        if ($InputObject.PSStandardMembers)
+        {
+            if ($InputObject.PSStandardMembers.DefaultDisplayPropertySet -ne $null)
+            {
+                $defaultDisplayProperty = $InputObject.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames[-1]
+            }
+            elseif ($InputObject.PSStandardMembers.DefaultDisplayProperty -ne $null)
+            {
+                $defaultDisplayProperty = $InputObject.PSStandardMembers.DefaultDisplayProperty[-1]
+            }
+            else { $defaultDisplayProperty = $null }
+                
+            if ($defaultDisplayProperty) { $propertySelect = $defaultDisplayProperty }
+        }
+    }
+    
+    if ($null -eq $GroupBy)
+    {
+        $propertySB = if ($propertySelect) { { [string]$_.($propertySelect.ToString()) } } else { { [string]$_ } }
+        $inputData = $inputData | Select-Object $propertySelect | ForEach-Object $propertySB
+    }
+    else
+    {
         if ($GroupBy -is [hashtable])
         {
             $GroupBy.Keys | ForEach-Object {
-                if     ($_ -match '^(na?m?e?|la?b?e?l?)$')     { $label = $GroupBy.$_ }
-                elseif ($_ -match '^ex?p?r?e?s?s?i?o?n?$')     { $expr = $GroupBy.$_ }
-                elseif ($_ -match '^fo?r?m?a?t?s?t?r?i?n?g?$') { $formatStr = $GroupBy.$_ }
+                if     ($_ -match '^(na?m?e?|la?b?e?l?)$')     { $gLabel = $GroupBy.$_ }
+                elseif ($_ -match '^ex?p?r?e?s?s?i?o?n?$')     { $gExpr = $GroupBy.$_ }
+                elseif ($_ -match '^fo?r?m?a?t?s?t?r?i?n?g?$') { $gFormatStr = $GroupBy.$_ }
                 else { Write-Error "Invalid GroupBy hash table key '${_}'." -Category 5 -EA 1 }
             }
-            if ($expr)
+            if ($gExpr)
             {
-                if ($label)
-                {
-                    if ($label -isnot [string]) { Write-Error "Invalid GroupBy name/label type." -Category 5 -EA 1 }
-                    $groupLabel = $label
-                }
-                if ($formatStr) { if ($formatStr -isnot [string]) { Write-Error "Invalid GroupBy formatstring type." -Category 5 -EA 1 } }
+                if ($gLabel -and $gLabel -isnot [string]) { Write-Error "Invalid GroupBy name/label type." -Category 5 -EA 1 }
+                if ($gFormatStr -and $gFormatStr -isnot [string]) { Write-Error "Invalid Property formatstring type." -Category 5 -EA 1 }
                 
-                if ($expr -is [string])
+                if ($gExpr -is [string] -or $gExpr -is [scriptblock])
                 {
-                    if ($formatStr) { $sb = { $formatStr -f $_.$expr } }
-                    else            { $sb = { $_.$expr } }
-                    
-                    $filterSB = [scriptblock]::Create("([string](${sb})) -eq `$grVal")
-                    foreach ($grVal in (($inputData | Group-Object $sb).Name | Sort-Object))
+                    if ($gFormatStr)
                     {
-                        New-Variable -Name ("inputData_" + "{0:00}" -f $i) -Value $inputData.Where($filterSB)
-                        New-Variable -Name ("groupValue_" + "{0:00}" -f $i++) -Value $grVal
+                        if ($gExpr -is [string]) { $groupSelect = {$gFormatStr -f $_.$gExpr} }
+                        else                     { $groupSelect = [scriptblock]::Create("'${gFormatStr}' -f $gExpr") }
                     }
-                    trap { Write-Error "GroupBy formatstring processing error." -Category 5 -EA 1 }
+                    else { $groupSelect = $gExpr }
                     
-                    if (-not $label)
+                    if (-not $gLabel)
                     {
-                        if (-not ($groupLabel = $inputData[0].PSObject.Properties.Name.Where({$_ -eq $expr}))) { $groupLabel = $expr }
+                        if ($gExpr -is [string])
+                        {
+                            if (-not ($groupLabel = $inputData[0].PSObject.Properties.Name.Where({$_ -eq $gExpr}))) { $groupLabel = $gExpr }
+                        }
+                        else { $groupLabel = $gExpr }
                     }
-                }
-                elseif ($expr -is [scriptblock])
-                {
-                    if ($formatStr) { $sb = [scriptblock]::Create("'${formatStr}' -f $expr") }
-                    else            { $sb = $expr }
-                    
-                    $filterSB = [scriptblock]::Create("([string](${sb})) -eq `$grVal")
-                    foreach ($grVal in (($inputData | Group-Object $sb).Name | Sort-Object))
-                    {
-                        New-Variable -Name ("inputData_" + "{0:00}" -f $i) -Value $inputData.Where($filterSB)
-                        New-Variable -Name ("groupValue_" + "{0:00}" -f $i++) -Value $grVal
-                    }
-                    trap { Write-Error "GroupBy processing error." -Category 5 -EA 1 }
-                    
-                    if (-not $label) { $groupLabel = $expr }
+                    else { $groupLabel = $gLabel }
                 }
                 else { Write-Error "Invalid GroupBy expression type." -Category 5 -EA 1 }
             }
             else { Write-Error "GroupBy hash table is missing mandatory expression entry." -Category 5 -EA 1 }
         }
-        elseif ($GroupBy -is [scriptblock])
+        elseif ($GroupBy -is [string] -or $GroupBy -is [scriptblock])
         {
-            $filterSB = [scriptblock]::Create("([string](${GroupBy})) -eq `$grVal")
-            foreach ($grVal in (($inputData | Group-Object $GroupBy).Name | Sort-Object))
-            {
-                New-Variable -Name ("inputData_" + "{0:00}" -f $i) -Value $inputData.Where($filterSB)
-                New-Variable -Name ("groupValue_" + "{0:00}" -f $i++) -Value $grVal
-            }
-            trap { Write-Error "GroupBy processing error." -Category 5 -EA 1 }
+            $groupSelect = $GroupBy
             
-            $groupLabel = $GroupBy
-        }
-        elseif ($GroupBy -is [string])
-        {
-            foreach ($grVal in (($inputData | Group-Object $GroupBy).Name | Sort-Object))
+            if ($GroupBy -is [string])
             {
-                New-Variable -Name ("inputData_" + "{0:00}" -f $i) -Value $inputData.Where({[string]$_.$GroupBy -eq $grVal})
-                New-Variable -Name ("groupValue_" + "{0:00}" -f $i++) -Value $grVal
+                if (-not ($groupLabel = $inputData[0].PSObject.Properties.Name.Where({$_ -eq $GroupBy}))) { $groupLabel = $GroupBy }
             }
-            if (-not ($groupLabel = $inputData[0].PSObject.Properties.Name.Where({$_ -eq $GroupBy}))) { $groupLabel = $GroupBy }
+            else { $groupLabel = $GroupBy }
         }
         else { Write-Error "Invalid GroupBy type." -Category 5 -EA 1 }
         
-        $expr = $formatStr = $null
-        if ($inputDataVbs = Get-Variable -Name inputData_*)
+        $inputData = $inputData | Select-Object $propertySelect, $groupSelect
+        
+        $groupProperty = $groupSelect.ToString()
+        $groupFilter = {[string]$_.$groupProperty -eq $groupValue}
+        $propertySB = if ($propertySelect) { { [string]$_.($propertySelect.ToString()) } } else { { [string]$_ } }
+        
+        $inputDataGroups = [Collections.ArrayList]::new()
+        $groupValues = [Collections.ArrayList]::new()
+        foreach ($groupValue in (($inputData | Group-Object $groupProperty).Name | Sort-Object))
         {
-            Remove-Variable inputData
-            $groupValueVbs = Get-Variable -Name groupValue_*
-            
-            # Property parameter validation and processing
-            if ($null -ne $Property)
-            {
-                if ($Property -is [hashtable])
-                {
-                    $Property.Keys | ForEach-Object {
-                        if     ($_ -match '^ex?p?r?e?s?s?i?o?n?$')     { $expr = $Property.$_ }
-                        elseif ($_ -match '^fo?r?m?a?t?s?t?r?i?n?g?$') { $formatStr = $Property.$_ }
-                        else { Write-Error "Invalid Property key '${_}'." -Category 5 -EA 1 }
-                    }
-                    if ($expr)
-                    {
-                        if ($expr -is [string])
-                        {
-                            $inputDataVbs | ForEach-Object { Set-Variable $_.Name -Value ($_.Value | ForEach-Object { $_.$expr }) }
-                        }
-                        elseif ($expr -is [scriptblock])
-                        {
-                            $inputDataVbs | ForEach-Object { Set-Variable $_.Name -Value ($_.Value | ForEach-Object $expr) }
-                            trap { Write-Error "Property expression processing error." -Category 5 -EA 1 }
-                        }
-                        else { Write-Error "Invalid Property expression type." -Category 5 -EA 1 }
-                    }
-                    if ($formatStr)
-                    {
-                        if ($formatStr -is [string])
-                        {
-                            $inputDataVbs | ForEach-Object { Set-Variable $_.Name -Value ($_.Value | ForEach-Object { $formatStr -f $_ }) }
-                            trap { Write-Error "Property processing error." -Category 5 -EA 1 }
-                        }
-                        else { Write-Error "Invalid Property formatstring type." -Category 5 -EA 1 }
-                    }
-                }
-                elseif ($Property -is [scriptblock])
-                {
-                    $inputDataVbs | ForEach-Object { Set-Variable $_.Name -Value ($_.Value | ForEach-Object $Property) }
-                    trap { Write-Error "Property processing error." -Category 5 -EA 1 }
-                }
-                elseif ($Property -is [string])
-                {
-                    $inputDataVbs | ForEach-Object { Set-Variable $_.Name -Value ($_.Value | ForEach-Object { $_.$Property }) }
-                }
-                else { Write-Error "Invalid Property type." -Category 5 -EA 1 }
-            }
-            else
-            {
-                if ($InputObject.PSStandardMembers)
-                {
-                    if ($InputObject.PSStandardMembers.DefaultDisplayPropertySet -ne $null)
-                    {
-                        $defaultDisplayProperty = $InputObject.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames[-1]
-                    }
-                    elseif ($InputObject.PSStandardMembers.DefaultDisplayProperty -ne $null)
-                    {
-                        $defaultDisplayProperty = $InputObject.PSStandardMembers.DefaultDisplayProperty[-1]
-                    }
-                    else { $defaultDisplayProperty = $null }
-                    
-                    if ($defaultDisplayProperty)
-                    {
-                        $inputDataVbs | ForEach-Object { Set-Variable $_.Name -Value ($_.Value | ForEach-Object { $_.$defaultDisplayProperty }) }
-                    }
-                }
-            }
-            
-            # Conversion to string array
-            $inputDataVbs | ForEach-Object { Set-Variable $_.Name -Value ($_.Value | ForEach-Object { [string]$_ }) }
-            
-            # Output Processing
-            
-            $consoleWidth = $Host.UI.RawUI.WindowSize.Width
-            $columnGap = 1
-            
-            if (-not $ColumnCount)
-            {
-                $ColumnCount = ($inputDataVbs | ForEach-Object {
-                    $maxLength = ($_.Value | Measure-Object Length -Maximum).Maximum
-                
-                    $colCount = [Math]::Max(1, [Math]::Floor($consoleWidth / ($maxLength + $columnGap)))
-                    if ($MaxColumnCount -and $MaxColumnCount -lt $colCount) { $MaxColumnCount }
-                    else                                                    { $colCount }
-                } | Measure-Object -Minimum).Minimum
-            }
-            
-            foreach ($inputDataVb in $inputDataVbs)
-            {
-                $rowCount = [Math]::Ceiling($inputDataVb.Value.Count / $ColumnCount)
-                
-                if ($MinRowCount -and $MinRowCount -gt $rowCount)
-                {
-                    $ColumnCount = [Math]::Max(1, [Math]::Floor($inputDataVb.Value.Count / $MinRowCount))
-                    $rowCount = [Math]::Ceiling($inputDataVb.Value.Count / $ColumnCount)
-                }
-                
-                $maxLength = ($inputDataVb.Value | Measure-Object Length -Maximum).Maximum
-                $columnWidth = [Math]::Floor(($consoleWidth - $ColumnCount * $columnGap) / $ColumnCount)
-                
-                <# Truncate strings longer than column width (applicable only for CustomSize mode, or in
-                   AutoSize mode if string lengths greater than or equal to console width are present). #>
-                if ($maxLength -gt $columnWidth)
-                {
-                    if ($columnWidth -ge 3)
-                    {
-                        $inputDataVb.Value = $inputDataVb.Value | ForEach-Object {
-                            if ($_.Length -gt $columnWidth) { $_.Remove($columnWidth - 3) + "..." }
-                            else                            { $_ }
-                        }
-                    }
-                    # Write terminating error if column width is too small for truncate ellipsis "..."
-                    else { Write-Error "ColumnCount value too large for output display." -Category 5 -EA 1 }
-                }
-                
-                # Create format string for output
-                $alignment = -($columnWidth + $columnGap)
-                $formatString = (
-                    0..($ColumnCount - 1) | ForEach-Object {
-                        "{${_},${alignment}}"
-                    }
-                ) -join ""
-                
-                # Output data ordered column by column or row by row, adding empty line(s) before and after.
-                
-                # Output group label and value
-                if ($PSEdition -eq 'Desktop') { Write-Output "" }
-                Write-Output "`n   ${groupLabel}: $($groupValueVbs[$j++].Value)`n"
-                if ($PSEdition -eq 'Desktop') { Write-Output "" }
-                
-                0..($rowCount - 1) | ForEach-Object {
-                    $row = $_
-                    $lineContent = 0..($ColumnCount - 1) | ForEach-Object {
-                        $column = $_
-                        if ($OrderBy -eq 'Column') { @($inputDataVb.Value)[$row + $column * $rowCount] }
-                        else                       { @($inputDataVb.Value)[$column + $row * $ColumnCount] }
-                    }
-                    Write-Output ($formatString -f $lineContent)
-                }
-                if ($inputDataVb.Name -eq @($inputDataVbs.Name)[-1])
-                {
-                    if ($PSEdition -eq 'Desktop') { Write-Output "`n" }
-                    else                          { Write-Output "" }
-                }
-            }
+            [void]$inputDataGroups.Add(($inputData.Where($groupFilter) | ForEach-Object $propertySB))
+            if ($groupValue) { [void]$groupValues.Add($groupValue) }
+            else             { [void]$groupValues.Add('$null') }
         }
     }
-    if ($null -eq $GroupBy -or $inputData)
-    {
-        # Property parameter validation and processing
-        if ($null -ne $Property)
-        {
-            if ($Property -is [hashtable])
-            {
-                $Property.Keys | ForEach-Object {
-                    if     ($_ -match '^ex?p?r?e?s?s?i?o?n?$')     { $expr = $Property.$_ }
-                    elseif ($_ -match '^fo?r?m?a?t?s?t?r?i?n?g?$') { $formatStr = $Property.$_ }
-                    else { Write-Error "Invalid Property key '${_}'." -Category 5 -EA 1 }
-                }
-                if ($expr)
-                {
-                    if ($expr -is [string])
-                    {
-                        $inputData = $inputData | ForEach-Object { $_.$expr }
-                    }
-                    elseif ($expr -is [scriptblock])
-                    {
-                        $inputData = $inputData | ForEach-Object $expr
-                        trap { Write-Error "Property expression processing error." -Category 5 -EA 1 }
-                    }
-                    else { Write-Error "Invalid Property expression type." -Category 5 -EA 1 }
-                }
-                if ($formatStr)
-                {
-                    if ($formatStr -is [string])
-                    {
-                        $inputData = $inputData | ForEach-Object { $formatStr -f $_ }
-                        trap { Write-Error "Property processing error." -Category 5 -EA 1 }
-                    }
-                    else { Write-Error "Invalid Property formatstring type." -Category 5 -EA 1 }
-                }
-            }
-            elseif ($Property -is [scriptblock])
-            {
-                $inputData = $inputData | ForEach-Object $Property
-                trap { Write-Error "Property processing error." -Category 5 -EA 1 }
-            }
-            elseif ($Property -is [string])
-            {
-                $inputData = $inputData | ForEach-Object { $_.$Property }
-            }
-            else { Write-Error "Invalid Property type." -Category 5 -EA 1 }
-        }
-        else
-        {
-            if ($InputObject.PSStandardMembers)
-            {
-                if ($InputObject.PSStandardMembers.DefaultDisplayPropertySet -ne $null)
-                {
-                    $defaultDisplayProperty = $InputObject.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames[-1]
-                }
-                elseif ($InputObject.PSStandardMembers.DefaultDisplayProperty -ne $null)
-                {
-                    $defaultDisplayProperty = $InputObject.PSStandardMembers.DefaultDisplayProperty[-1]
-                }
-                else { $defaultDisplayProperty = $null }
-                
-                if ($defaultDisplayProperty)
-                {
-                    $inputData = $inputData | ForEach-Object { $_.$defaultDisplayProperty }
-                }
-            }
-        }
-        
-        # Conversion to string array
-        $inputData = $inputData | ForEach-Object { [string]$_ }
-        
-        # Output Processing
     
-        $consoleWidth = $Host.UI.RawUI.WindowSize.Width
-        $columnGap = 1
-        
+    # Output Processing
+    
+    $consoleWidth = $Host.UI.RawUI.WindowSize.Width
+    $columnGap = 1
+    
+    if (-not $inputDataGroups)
+    {
         $maxLength = ($inputData | Measure-Object Length -Maximum).Maximum
         
         if (-not $ColumnCount)
         {
             $ColumnCount = [Math]::Max(1, [Math]::Floor($consoleWidth / ($maxLength + $columnGap)))
-            if ($_.Value.Count -lt $colCount) { $ColumnCount = $inputData.Count }
+            
+            if ($inputData.Count -lt $ColumnCount) { $ColumnCount = $inputData.Count }
             if ($MaxColumnCount -and $MaxColumnCount -lt $ColumnCount) { $ColumnCount = $MaxColumnCount }
         }
         
@@ -479,5 +303,76 @@ function Format-Column
         }
         if ($PSEdition -eq 'Desktop') { Write-Output "`n" }
         else                          { Write-Output "" }
+    }
+    else
+    {
+        if (-not $ColumnCount)
+        {
+            $ColumnCount = ($inputDataGroups | ForEach-Object {
+                $maxLength = ($_ | Measure-Object Length -Maximum).Maximum
+                $colCount = [Math]::Max(1, [Math]::Floor($consoleWidth / ($maxLength + $columnGap)))
+                
+                if ($MaxColumnCount -and $MaxColumnCount -lt $colCount) { $MaxColumnCount }
+                else                                                    { $colCount }
+            } | Measure-Object -Minimum).Minimum
+        }
+        
+        foreach ($inputDataGroup in $inputDataGroups)
+        {
+            $rowCount = [Math]::Ceiling($inputDataGroup.Count / $ColumnCount)
+            
+            if ($MinRowCount -and $MinRowCount -gt $rowCount)
+            {
+                $ColumnCount = [Math]::Max(1, [Math]::Floor($inputDataGroup.Count / $MinRowCount))
+                $rowCount = [Math]::Ceiling($inputDataGroup.Count / $ColumnCount)
+            }
+                
+            $maxLength = ($inputDataGroup | Measure-Object Length -Maximum).Maximum
+            $columnWidth = [Math]::Floor(($consoleWidth - $ColumnCount * $columnGap) / $ColumnCount)
+                
+            <# Truncate strings longer than column width (applicable only for CustomSize mode, or in
+               AutoSize mode if string lengths greater than or equal to console width are present). #>
+            if ($maxLength -gt $columnWidth)
+            {
+                if ($columnWidth -ge 3)
+                {
+                    $inputDataGroup = $inputDataGroup | ForEach-Object {
+                        if ($_.Length -gt $columnWidth) { $_.Remove($columnWidth - 3) + "..." }
+                        else                            { $_ }
+                    }
+                }
+                # Write terminating error if column width is too small for truncate ellipsis "..."
+                else { Write-Error "ColumnCount value too large for output display." -Category 5 -EA 1 }
+            }
+            
+            # Create format string for output
+            $alignment = -($columnWidth + $columnGap)
+            $formatString = (
+                0..($ColumnCount - 1) | ForEach-Object {
+                    "{${_},${alignment}}"
+                }
+            ) -join ""
+            
+            # Output data ordered column by column or row by row, adding empty line(s) before and after
+            
+            if ($PSEdition -eq 'Desktop') { Write-Output "" }
+            Write-Output "`n   ${groupLabel}: $($groupValues[$i++])`n" # Output group label and value
+            if ($PSEdition -eq 'Desktop') { Write-Output "" }
+                
+            0..($rowCount - 1) | ForEach-Object {
+                $row = $_
+                $lineContent = 0..($ColumnCount - 1) | ForEach-Object {
+                    $column = $_
+                    if ($OrderBy -eq 'Column') { @($inputDataGroup)[$row + $column * $rowCount] }
+                    else                       { @($inputDataGroup)[$column + $row * $ColumnCount] }
+                }
+                Write-Output ($formatString -f $lineContent)
+            }
+            if ($i -eq $groupValues.Count)
+            {
+                if ($PSEdition -eq 'Desktop') { Write-Output "`n" }
+                else                          { Write-Output "" }
+            }
+        }
     }
 }
