@@ -240,7 +240,7 @@ function Format-Column
             if ($groupValue) { [void]$groupValues.Add($groupValue) }
             else             { [void]$groupValues.Add('$null') }
         }
-        trap {Write-Error "Property/GroupBy parameter processing error." -Category 5 -EA 1 }
+        trap { Write-Error "Property/GroupBy parameter processing error." -Category 5 -EA 1 }
     }
     
     # Output Processing
