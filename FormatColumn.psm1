@@ -119,7 +119,7 @@ function Format-Column
     
     # Property and GroupBy validation and processing
     
-    if ($null -ne $Property)
+    if ($Property)
     {
         if ($Property -is [hashtable])
         {
@@ -165,12 +165,20 @@ function Format-Column
                 
             if ($defaultDisplayProperty) { $propertySelect = $defaultDisplayProperty }
         }
+        else { $propertySelect = {$_} }
     }
     
-    if ($null -eq $GroupBy)
+    if (-not $GroupBy)
     {
-        $propertySB = if ($propertySelect) { { [string]$_.($propertySelect.ToString()) } } else { { [string]$_ } }
-        $inputData = $inputData | Select-Object $propertySelect | ForEach-Object $propertySB
+        if ($Property -or $defaultDisplayProperty)
+        {
+            $inputData = $inputData | Select-Object $propertySelect | ForEach-Object { [string]$_.$propertySelect }
+        }
+        else
+        {
+            $inputData = $inputData | ForEach-Object { [string]$_ }
+        }
+        trap { Write-Error "Property parameter processing error." -Category 5 -EA 1 }
     }
     else
     {
@@ -223,24 +231,22 @@ function Format-Column
         else { Write-Error "Invalid GroupBy type." -Category 5 -EA 1 }
         
         $inputData = $inputData | Select-Object $propertySelect, $groupSelect
-        
-        $groupProperty = $groupSelect.ToString()
-        $groupFilter = {[string]$_.$groupProperty -eq $groupValue}
-        $propertySB = if ($propertySelect) { { [string]$_.($propertySelect.ToString()) } } else { { [string]$_ } }
-        
-        $inputDataGroups = [Collections.ArrayList]::new()
-        $groupValues = [Collections.ArrayList]::new()
-        foreach ($groupValue in (($inputData | Group-Object $groupProperty).Name | Sort-Object))
+        $groupFilter = {[string]$_.$groupSelect -eq $groupValue}
+
+        $inputDataGroups, $groupValues = [Collections.ArrayList]@(), [Collections.ArrayList]@()
+        foreach ($groupValue in (($inputData | Group-Object -Property ([string]$groupSelect)).Name | Sort-Object))
         {
-            [void]$inputDataGroups.Add(($inputData.Where($groupFilter) | ForEach-Object $propertySB))
+            [void]$inputDataGroups.Add(($inputData.Where($groupFilter) | ForEach-Object { [string]$_.$propertySelect }))
             if ($groupValue) { [void]$groupValues.Add($groupValue) }
             else             { [void]$groupValues.Add('$null') }
         }
+        trap {Write-Error "Property/GroupBy parameter processing error." -Category 5 -EA 1 }
     }
     
     # Output Processing
     
-    $consoleWidth = $Host.UI.RawUI.WindowSize.Width
+    if (-not $psISE) { $consoleWidth = $Host.UI.RawUI.WindowSize.Width }
+    else             { $consoleWidth = $Host.UI.RawUI.BufferSize.Width }
     $columnGap = 1
     
     if (-not $inputDataGroups)
@@ -326,10 +332,10 @@ function Format-Column
                 $ColumnCount = [Math]::Max(1, [Math]::Floor($inputDataGroup.Count / $MinRowCount))
                 $rowCount = [Math]::Ceiling($inputDataGroup.Count / $ColumnCount)
             }
-                
+            
             $maxLength = ($inputDataGroup | Measure-Object Length -Maximum).Maximum
             $columnWidth = [Math]::Floor(($consoleWidth - $ColumnCount * $columnGap) / $ColumnCount)
-                
+            
             <# Truncate strings longer than column width (applicable only for CustomSize mode, or in
                AutoSize mode if string lengths greater than or equal to console width are present). #>
             if ($maxLength -gt $columnWidth)
@@ -358,7 +364,7 @@ function Format-Column
             if ($PSEdition -eq 'Desktop') { Write-Output "" }
             Write-Output "`n   ${groupLabel}: $($groupValues[$i++])`n" # Output group label and value
             if ($PSEdition -eq 'Desktop') { Write-Output "" }
-                
+            
             0..($rowCount - 1) | ForEach-Object {
                 $row = $_
                 $lineContent = 0..($ColumnCount - 1) | ForEach-Object {
