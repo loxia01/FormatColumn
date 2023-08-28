@@ -140,13 +140,15 @@ function Format-Column
                 }
                 else
                 {
-                    if ($pExpr -is [string] -or $pExpr -is [scriptblock]) { $propertySelect = $pExpr }
+                    if     ($pExpr -is [string])      { $propertySelect = {[string]$_.$pExpr} }
+                    elseif ($pExpr -is [scriptblock]) { $propertySelect = [scriptblock]::Create("[string]@(${pExpr})") }
                     else { Write-Error "Invalid Property expression type." -Category 5 -EA 1 }
                 }
             }
             else { Write-Error "Property hash table is missing mandatory expression entry." -Category 5 -EA 1 }
         }
-        elseif ($Property -is [string] -or $Property -is [scriptblock]) { $propertySelect = $Property }
+        elseif ($Property -is [string])      { $propertySelect = {[string]$_.$Property} }
+        elseif ($Property -is [scriptblock]) { $propertySelect = [scriptblock]::Create("[string]@(${Property})") }
         else { Write-Error "Invalid Property type." -Category 5 -EA 1 }
     }
     else
@@ -163,22 +165,15 @@ function Format-Column
             }
             else { $defaultDisplayProperty = $null }
                 
-            if ($defaultDisplayProperty) { $propertySelect = $defaultDisplayProperty }
+            if ($defaultDisplayProperty) { $propertySelect = {[string]$_.$defaultDisplayProperty} }
         }
-        else { $propertySelect = {$_} }
+        else { $propertySelect = {[string]$_} }
     }
     
     if (-not $GroupBy)
     {
-        if ($Property -or $defaultDisplayProperty)
-        {
-            $inputData = $inputData | Select-Object $propertySelect | ForEach-Object { [string]$_.$propertySelect }
-        }
-        else
-        {
-            $inputData = $inputData | ForEach-Object { [string]$_ }
-        }
-        trap { Write-Error "Property parameter processing error." -Category 5 -EA 1 }
+        $inputData = $inputData | ForEach-Object $propertySelect
+        trap { Write-Error $_ -Category 5 -EA 1 }
     }
     else
     {
@@ -202,7 +197,11 @@ function Format-Column
                         if ($gExpr -is [string]) { $groupSelect = {$gFormatStr -f $_.$gExpr} }
                         else                     { $groupSelect = [scriptblock]::Create("'${gFormatStr}' -f $gExpr") }
                     }
-                    else { $groupSelect = $gExpr }
+                    else
+                    {
+                        if ($gExpr -is [string]) { $groupSelect = {$_.$gExpr} }
+                        else                     { $groupSelect = [scriptblock]::Create($gExpr) }
+                    }
                     
                     if (-not $gLabel)
                     {
@@ -218,29 +217,31 @@ function Format-Column
             }
             else { Write-Error "GroupBy hash table is missing mandatory expression entry." -Category 5 -EA 1 }
         }
-        elseif ($GroupBy -is [string] -or $GroupBy -is [scriptblock])
+        elseif ($GroupBy -is [string])
         {
-            $groupSelect = $GroupBy
-            
-            if ($GroupBy -is [string])
-            {
-                if (-not ($groupLabel = $inputData[0].PSObject.Properties.Name.Where({$_ -eq $GroupBy}))) { $groupLabel = $GroupBy }
-            }
-            else { $groupLabel = $GroupBy }
+            $groupSelect = {$_.$GroupBy}
+            if (-not ($groupLabel = $inputData[0].PSObject.Properties.Name.Where({$_ -eq $GroupBy}))) { $groupLabel = $GroupBy }
+        }
+        elseif ($GroupBy -is [scriptblock])
+        {
+            $groupSelect = [scriptblock]::Create($GroupBy)
+            $groupLabel = $GroupBy
         }
         else { Write-Error "Invalid GroupBy type." -Category 5 -EA 1 }
         
-        $inputData = $inputData | Select-Object $propertySelect, $groupSelect
-        $groupFilter = {[string]$_.$groupSelect -eq $groupValue}
-
-        $inputDataGroups, $groupValues = [Collections.ArrayList]@(), [Collections.ArrayList]@()
-        foreach ($groupValue in (($inputData | Group-Object -Property ([string]$groupSelect)).Name | Sort-Object))
-        {
-            [void]$inputDataGroups.Add(($inputData.Where($groupFilter) | ForEach-Object { [string]$_.$propertySelect }))
-            if ($groupValue) { [void]$groupValues.Add($groupValue) }
-            else             { [void]$groupValues.Add('$null') }
+        $inputData = $inputData | ForEach-Object {
+            [pscustomobject]@{$propertySelect = & $propertySelect; $groupSelect = & $groupSelect}
         }
-        trap { Write-Error "Property/GroupBy parameter processing error." -Category 5 -EA 1 }
+        trap { Write-Error $_ -Category 5 -EA 1 }
+        
+        $groupValues = ($inputData | Group-Object ([string]$groupSelect)).Name | Sort-Object
+        $groupFilter = {[string]$_.$groupSelect -eq $groupValue}
+        
+        $inputDataGroups = [Collections.ArrayList]@()
+        foreach ($groupValue in $groupValues)
+        {
+            [void]$inputDataGroups.Add(($inputData.Where($groupFilter).ForEach([string]$propertySelect)))
+        }
     }
     
     # Output Processing
@@ -294,18 +295,31 @@ function Format-Column
             }
         ) -join ""
         
-        # Output data ordered column by column or row by row, adding blank line(s) before and after
+        # Output data ordered column by column or row by row
         
         if ($PSEdition -eq 'Desktop') { Write-Output "`n" }
         else                          { Write-Output "" }
-        0..($rowCount - 1) | ForEach-Object {
-            $row = $_
-            $lineContent = 0..($ColumnCount - 1) | ForEach-Object {
-                $column = $_
-                if ($OrderBy -eq 'Column') { @($inputData)[$row + $column * $rowCount] }
-                else                       { @($inputData)[$column + $row * $ColumnCount] }
+        if ($OrderBy -eq 'Column')
+        {
+            0..($rowCount - 1) | ForEach-Object {
+                $row = $_
+                $lineContent = 0..($ColumnCount - 1) | ForEach-Object {
+                    $column = $_
+                    @($inputData)[$row + $column * $rowCount]
+                }
+                Write-Output ($formatString -f $lineContent)
             }
-            Write-Output ($formatString -f $lineContent)
+        }
+        else
+        {
+            0..($rowCount - 1) | ForEach-Object {
+                $row = $_
+                $lineContent = 0..($ColumnCount - 1) | ForEach-Object {
+                    $column = $_
+                    @($inputData)[$column + $row * $ColumnCount]
+                }
+                Write-Output ($formatString -f $lineContent)
+            }
         }
         if ($PSEdition -eq 'Desktop') { Write-Output "`n" }
         else                          { Write-Output "" }
@@ -323,6 +337,7 @@ function Format-Column
             } | Measure-Object -Minimum).Minimum
         }
         
+        $i = 0
         foreach ($inputDataGroup in $inputDataGroups)
         {
             $rowCount = [Math]::Ceiling($inputDataGroup.Count / $ColumnCount)
@@ -359,22 +374,37 @@ function Format-Column
                 }
             ) -join ""
             
-            # Output data ordered column by column or row by row, adding empty line(s) before and after
+            # Output data ordered column by column or row by row, adding group label and value
+            
+            $groupValue = if (@($groupValues)[$i]) { @($groupValues)[$i] } else { '$null' }
             
             if ($PSEdition -eq 'Desktop') { Write-Output "" }
-            Write-Output "`n   ${groupLabel}: $($groupValues[$i++])`n" # Output group label and value
+            Write-Output "`n   ${groupLabel}: ${groupValue}`n"
             if ($PSEdition -eq 'Desktop') { Write-Output "" }
             
-            0..($rowCount - 1) | ForEach-Object {
-                $row = $_
-                $lineContent = 0..($ColumnCount - 1) | ForEach-Object {
-                    $column = $_
-                    if ($OrderBy -eq 'Column') { @($inputDataGroup)[$row + $column * $rowCount] }
-                    else                       { @($inputDataGroup)[$column + $row * $ColumnCount] }
+            if ($OrderBy -eq 'Column')
+            {
+                0..($rowCount - 1) | ForEach-Object {
+                    $row = $_
+                    $lineContent = 0..($ColumnCount - 1) | ForEach-Object {
+                        $column = $_
+                        @($inputDataGroup)[$row + $column * $rowCount]
+                    }
+                    Write-Output ($formatString -f $lineContent)
                 }
-                Write-Output ($formatString -f $lineContent)
             }
-            if ($i -eq $groupValues.Count)
+            else
+            {
+                0..($rowCount - 1) | ForEach-Object {
+                    $row = $_
+                    $lineContent = 0..($ColumnCount - 1) | ForEach-Object {
+                        $column = $_
+                        @($inputDataGroup)[$column + $row * $ColumnCount]
+                    }
+                    Write-Output ($formatString -f $lineContent)
+                }
+            }
+            if (++$i -eq $groupValues.Count)
             {
                 if ($PSEdition -eq 'Desktop') { Write-Output "`n" }
                 else                          { Write-Output "" }
