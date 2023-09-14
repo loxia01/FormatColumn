@@ -60,7 +60,7 @@ Object to format for display. Accepts pipeline input.
 #### Example 1
 `1..100 | Format-Column -MinRowCount 20 -OrderBy Row`
 #### Example 2 
-`Format-Column -Property @{FormatString='{0:000}'} -ColumnCount 3 -InputObject @(1..125)`
+`Format-Column -Property @{FormatString='{0:000}'} -ColumnCount 3 -InputObject (1..125)`
 #### Example 3
 `Get-Process | Format-Column -Property @{Expr='Id'; FormatStr='{0:00000}'}`
 #### Example 4
