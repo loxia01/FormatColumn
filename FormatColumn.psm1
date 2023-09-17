@@ -110,12 +110,11 @@ function Format-Column
         [string]$OrderBy = 'Column',
         
         [Parameter(ValueFromPipeline)]
-        [Object]$InputObject
+        [psobject]$InputObject
     )
     if ($input) { $InputObject = $input }
     
-    if ($null -ne $InputObject) { $inputData = $InputObject }
-    else { return }
+    if ($null -eq $InputObject) { return }
     
     # Property and GroupBy validation and processing
     
@@ -128,22 +127,21 @@ function Format-Column
                 elseif ($_ -match '^fo?r?m?a?t?s?t?r?i?n?g?$') { $pFormatStr = $Property.$_ }
                 else { Write-Error "Invalid Property key '${_}'." -Category 5 -EA 1 }
             }
+            if ($pFormatStr -and $pFormatStr -isnot [string]) { Write-Error "Invalid Property formatstring type." -Category 5 -EA 1 }
             if ($pExpr)
             {
-                if ($pFormatStr)
+                if ($pExpr -is [string])
                 {
-                    if ($pFormatStr -isnot [string]) { Write-Error "Invalid Property formatstring type." -Category 5 -EA 1 }
-                    
-                    if     ($pExpr -is [string])      { $propertySelect = {$pFormatStr -f $_.$pExpr} }
-                    elseif ($pExpr -is [scriptblock]) { $propertySelect = [scriptblock]::Create("'${pFormatStr}' -f $pExpr") }
-                    else { Write-Error "Invalid Property expression type." -Category 5 -EA 1 }
+                    if ($pFormatStr) { $propertySelect = {$pFormatStr -f $_.$pExpr} }
+                    else             { $propertySelect = {[string]$_.$pExpr} }
                 }
-                else
+                elseif ($pExpr -is [scriptblock])
                 {
-                    if     ($pExpr -is [string])      { $propertySelect = {[string]$_.$pExpr} }
-                    elseif ($pExpr -is [scriptblock]) { $propertySelect = [scriptblock]::Create("[string]@(${pExpr})") }
-                    else { Write-Error "Invalid Property expression type." -Category 5 -EA 1 }
+                    $pExpr = [scriptblock]::Create("[string]@(${pExpr})")
+                    if ($pFormatStr) { $propertySelect = {$pFormatStr -f (& $pExpr)} }
+                    else             { $propertySelect = $pExpr }
                 }
+                else { Write-Error "Invalid Property expression type." -Category 5 -EA 1 }
             }
             else { Write-Error "Property hash table is missing mandatory expression entry." -Category 5 -EA 1 }
         }
@@ -153,27 +151,48 @@ function Format-Column
     }
     else
     {
-        if ($InputObject.PSStandardMembers)
+        if ($InputObject[0].PSStandardMembers)
         {
-            if ($InputObject.PSStandardMembers.DefaultDisplayPropertySet -ne $null)
-            {
-                $defaultDisplayProperty = $InputObject.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames[-1]
-            }
-            elseif ($InputObject.PSStandardMembers.DefaultDisplayProperty -ne $null)
-            {
-                $defaultDisplayProperty = $InputObject.PSStandardMembers.DefaultDisplayProperty[-1]
-            }
-            else { $defaultDisplayProperty = $null }
-                
-            if ($defaultDisplayProperty) { $propertySelect = {[string]$_.$defaultDisplayProperty} }
+            $defaultDisplayProperty =
+                if ($InputObject[0].PSStandardMembers.DefaultDisplayPropertySet -ne $null)
+                {
+                    if ($InputObject[0].PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames -contains 'Name')
+                    {
+                        'Name'
+                    }
+                    elseif ($InputObject[0].PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames -like '*Name')
+                    {
+                        @($InputObject[0].PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames.Where({$_ -like '*Name'}))[0]
+                    }
+                    else { $InputObject[0].PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames[0] }
+                }
+                else
+                {
+                    $InputObject[0].PSStandardMembers.DefaultDisplayProperty
+                }
+            
+            $propertySelect = {[string]$_.$defaultDisplayProperty}
         }
-        else { $propertySelect = {[string]$_} }
+        else
+        {
+            $customPropertyNames = @($InputObject)[0].PSObject.Properties.Where({$_.MemberType -ne 'Property'}).Name
+            if ($customPropertyNames)
+            {
+                $displayProperty =
+                    if     ($customPropertyNames -contains 'Name') { 'Name' }
+                    elseif ($customPropertyNames -like '*Name')    { @($customPropertyNames.Where({$_ -like '*Name'}))[0] }
+                    else                                           { @($customPropertyNames)[0] }
+                
+                $propertySelect = { [string]$_.$displayProperty }
+            }
+            else { $propertySelect = {[string]$_} }
+        }   
     }
     
     if (-not $GroupBy)
     {
-        $inputData = $inputData | ForEach-Object $propertySelect
-        trap { Write-Error $_ -Category 5 -EA 1 }
+        $outputData = $InputObject | ForEach-Object $propertySelect
+        trap { Write-Error $_ -EA 1 }
     }
     else
     {
@@ -185,63 +204,58 @@ function Format-Column
                 elseif ($_ -match '^fo?r?m?a?t?s?t?r?i?n?g?$') { $gFormatStr = $GroupBy.$_ }
                 else { Write-Error "Invalid GroupBy hash table key '${_}'." -Category 5 -EA 1 }
             }
+            if ($gLabel -and $gLabel -isnot [string]) { Write-Error "Invalid GroupBy name/label type." -Category 5 -EA 1 }
+            if ($gFormatStr -and $gFormatStr -isnot [string]) { Write-Error "Invalid GroupBy formatstring type." -Category 5 -EA 1 }
             if ($gExpr)
             {
-                if ($gLabel -and $gLabel -isnot [string]) { Write-Error "Invalid GroupBy name/label type." -Category 5 -EA 1 }
-                if ($gFormatStr -and $gFormatStr -isnot [string]) { Write-Error "Invalid Property formatstring type." -Category 5 -EA 1 }
-                
-                if ($gExpr -is [string] -or $gExpr -is [scriptblock])
+                if ($gExpr -is [string])
                 {
-                    if ($gFormatStr)
-                    {
-                        if ($gExpr -is [string]) { $groupSelect = {$gFormatStr -f $_.$gExpr} }
-                        else                     { $groupSelect = [scriptblock]::Create("'${gFormatStr}' -f $gExpr") }
-                    }
-                    else
-                    {
-                        if ($gExpr -is [string]) { $groupSelect = {$_.$gExpr} }
-                        else                     { $groupSelect = [scriptblock]::Create($gExpr) }
-                    }
-                    
-                    if (-not $gLabel)
-                    {
-                        if ($gExpr -is [string])
-                        {
-                            if (-not ($groupLabel = $inputData[0].PSObject.Properties.Name.Where({$_ -eq $gExpr}))) { $groupLabel = $gExpr }
-                        }
-                        else { $groupLabel = $gExpr }
-                    }
-                    else { $groupLabel = $gLabel }
+                    if ($gFormatStr) { $groupSelect = {$gFormatStr -f $_.$gExpr} }
+                    else             { $groupSelect = {[string]$_.$gExpr} }
+                }
+                elseif ($gExpr -is [scriptblock])
+                {
+                    $gExpr = [scriptblock]::Create("[string]@(${gExpr})")
+                    if ($gFormatStr) { $groupSelect = {$gFormatStr -f (& $gExpr)} }
+                    else             { $groupSelect = $gExpr }
                 }
                 else { Write-Error "Invalid GroupBy expression type." -Category 5 -EA 1 }
             }
             else { Write-Error "GroupBy hash table is missing mandatory expression entry." -Category 5 -EA 1 }
         }
-        elseif ($GroupBy -is [string])
-        {
-            $groupSelect = {$_.$GroupBy}
-            if (-not ($groupLabel = $inputData[0].PSObject.Properties.Name.Where({$_ -eq $GroupBy}))) { $groupLabel = $GroupBy }
-        }
-        elseif ($GroupBy -is [scriptblock])
-        {
-            $groupSelect = [scriptblock]::Create($GroupBy)
-            $groupLabel = $GroupBy
-        }
+        elseif ($GroupBy -is [string]) { $groupSelect = {[string]$_.$GroupBy} }
+        elseif ($GroupBy -is [scriptblock]) { $groupSelect = [scriptblock]::Create("[string]@(${GroupBy})") }
         else { Write-Error "Invalid GroupBy type." -Category 5 -EA 1 }
         
-        $inputData = $inputData | ForEach-Object {
+        if (-not $gLabel)
+        {
+            if (($GroupBy -is [string] -or $gExpr -is [string]))
+            {
+                $propertyNames = @($InputObject)[0].PSObject.Properties.Name
+                if ($gExpr) { $gLabel = $propertyNames.Where({$_ -eq $gExpr}) }
+                else        { $gLabel = $propertyNames.Where({$_ -eq $GroupBy}) }
+            }
+            if (-not $gLabel)
+            {
+                if ($gExpr) { $gLabel = $gExpr }
+                else        { $gLabel = $GroupBy }
+            }
+        }
+        
+        $outputData = $InputObject | ForEach-Object {
             [pscustomobject]@{$propertySelect = & $propertySelect; $groupSelect = & $groupSelect}
         }
-        trap { Write-Error $_ -Category 5 -EA 1 }
         
-        $groupValues = ($inputData | Group-Object ([string]$groupSelect)).Name | Sort-Object
+        $groupValues = $outputData.$groupSelect | Sort-Object -Unique
         $groupFilter = {[string]$_.$groupSelect -eq $groupValue}
         
-        $inputDataGroups = [Collections.ArrayList]@()
+        $outputDataGroups = [Collections.ArrayList]@()
         foreach ($groupValue in $groupValues)
         {
-            [void]$inputDataGroups.Add(($inputData.Where($groupFilter).ForEach([string]$propertySelect)))
+            [void]$outputDataGroups.Add(($outputData.Where($groupFilter).ForEach([string]$propertySelect)))
         }
+        
+        trap { Write-Error $_ -EA 1 }
     }
     
     # Output Processing
@@ -250,24 +264,24 @@ function Format-Column
     else             { $consoleWidth = $Host.UI.RawUI.BufferSize.Width }
     $columnGap = 1
     
-    if (-not $inputDataGroups)
+    if (-not $outputDataGroups)
     {
-        $maxLength = ($inputData | Measure-Object Length -Maximum).Maximum
+        $maxLength = ($outputData | Measure-Object Length -Maximum).Maximum
         
         if (-not $ColumnCount)
         {
             $ColumnCount = [Math]::Max(1, [Math]::Floor($consoleWidth / ($maxLength + $columnGap)))
             
-            if ($inputData.Count -lt $ColumnCount) { $ColumnCount = $inputData.Count }
+            if ($outputData.Count -lt $ColumnCount) { $ColumnCount = $outputData.Count }
             if ($MaxColumnCount -and $MaxColumnCount -lt $ColumnCount) { $ColumnCount = $MaxColumnCount }
         }
         
-        $rowCount = [Math]::Ceiling($inputData.Count / $ColumnCount)
+        $rowCount = [Math]::Ceiling($outputData.Count / $ColumnCount)
         
         if ($MinRowCount -and $MinRowCount -gt $rowCount)
         {
-            $ColumnCount = [Math]::Max(1, [Math]::Floor($inputData.Count / $MinRowCount))
-            $rowCount = [Math]::Ceiling($inputData.Count / $ColumnCount)
+            $ColumnCount = [Math]::Max(1, [Math]::Floor($outputData.Count / $MinRowCount))
+            $rowCount = [Math]::Ceiling($outputData.Count / $ColumnCount)
         }
         
         $columnWidth = [Math]::Floor(($consoleWidth - $ColumnCount * $columnGap) / $ColumnCount)
@@ -278,7 +292,7 @@ function Format-Column
         {
             if ($columnWidth -ge 3)
             {
-                $inputData = $inputData | ForEach-Object {
+                $outputData = $outputData | ForEach-Object {
                     if ($_.Length -gt $columnWidth) { $_.Remove($columnWidth - 3) + "..." }
                     else                            { $_ }
                 }
@@ -305,7 +319,7 @@ function Format-Column
                 $row = $_
                 $lineContent = 0..($ColumnCount - 1) | ForEach-Object {
                     $column = $_
-                    @($inputData)[$row + $column * $rowCount]
+                    @($outputData)[$row + $column * $rowCount]
                 }
                 Write-Output ($formatString -f $lineContent)
             }
@@ -316,7 +330,7 @@ function Format-Column
                 $row = $_
                 $lineContent = 0..($ColumnCount - 1) | ForEach-Object {
                     $column = $_
-                    @($inputData)[$column + $row * $ColumnCount]
+                    @($outputData)[$column + $row * $ColumnCount]
                 }
                 Write-Output ($formatString -f $lineContent)
             }
@@ -328,7 +342,7 @@ function Format-Column
     {
         if (-not $ColumnCount)
         {
-            $ColumnCount = ($inputDataGroups | ForEach-Object {
+            $ColumnCount = ($outputDataGroups | ForEach-Object {
                 $maxLength = ($_ | Measure-Object Length -Maximum).Maximum
                 $colCount = [Math]::Max(1, [Math]::Floor($consoleWidth / ($maxLength + $columnGap)))
                 
@@ -338,17 +352,17 @@ function Format-Column
         }
         
         $i = 0
-        foreach ($inputDataGroup in $inputDataGroups)
+        foreach ($outputDataGroup in $outputDataGroups)
         {
-            $rowCount = [Math]::Ceiling($inputDataGroup.Count / $ColumnCount)
+            $rowCount = [Math]::Ceiling($outputDataGroup.Count / $ColumnCount)
             
             if ($MinRowCount -and $MinRowCount -gt $rowCount)
             {
-                $ColumnCount = [Math]::Max(1, [Math]::Floor($inputDataGroup.Count / $MinRowCount))
-                $rowCount = [Math]::Ceiling($inputDataGroup.Count / $ColumnCount)
+                $ColumnCount = [Math]::Max(1, [Math]::Floor($outputDataGroup.Count / $MinRowCount))
+                $rowCount = [Math]::Ceiling($outputDataGroup.Count / $ColumnCount)
             }
             
-            $maxLength = ($inputDataGroup | Measure-Object Length -Maximum).Maximum
+            $maxLength = ($outputDataGroup | Measure-Object Length -Maximum).Maximum
             $columnWidth = [Math]::Floor(($consoleWidth - $ColumnCount * $columnGap) / $ColumnCount)
             
             <# Truncate strings longer than column width (applicable only for CustomSize mode, or in
@@ -357,7 +371,7 @@ function Format-Column
             {
                 if ($columnWidth -ge 3)
                 {
-                    $inputDataGroup = $inputDataGroup | ForEach-Object {
+                    $outputDataGroup = $outputDataGroup | ForEach-Object {
                         if ($_.Length -gt $columnWidth) { $_.Remove($columnWidth - 3) + "..." }
                         else                            { $_ }
                     }
@@ -376,10 +390,8 @@ function Format-Column
             
             # Output data ordered column by column or row by row, adding group label and value
             
-            $groupValue = if (@($groupValues)[$i]) { @($groupValues)[$i] } else { '$null' }
-            
             if ($PSEdition -eq 'Desktop') { Write-Output "" }
-            Write-Output "`n   ${groupLabel}: ${groupValue}`n"
+            Write-Output "`n   ${gLabel}: $(@($groupValues)[$i])`n"
             if ($PSEdition -eq 'Desktop') { Write-Output "" }
             
             if ($OrderBy -eq 'Column')
@@ -388,7 +400,7 @@ function Format-Column
                     $row = $_
                     $lineContent = 0..($ColumnCount - 1) | ForEach-Object {
                         $column = $_
-                        @($inputDataGroup)[$row + $column * $rowCount]
+                        @($outputDataGroup)[$row + $column * $rowCount]
                     }
                     Write-Output ($formatString -f $lineContent)
                 }
@@ -399,7 +411,7 @@ function Format-Column
                     $row = $_
                     $lineContent = 0..($ColumnCount - 1) | ForEach-Object {
                         $column = $_
-                        @($inputDataGroup)[$column + $row * $ColumnCount]
+                        @($outputDataGroup)[$column + $row * $ColumnCount]
                     }
                     Write-Output ($formatString -f $lineContent)
                 }
