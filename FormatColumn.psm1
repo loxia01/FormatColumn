@@ -249,10 +249,10 @@ function Format-Column
         $groupValues = $outputData.$groupSelect | Sort-Object -Unique
         $groupFilter = {[string]$_.$groupSelect -eq $groupValue}
         
-        $outputDataGroups = [Collections.ArrayList]@()
+        $outputDataGroups = [Collections.Generic.List[Object]]@()
         foreach ($groupValue in $groupValues)
         {
-            [void]$outputDataGroups.Add(($outputData.Where($groupFilter).ForEach([string]$propertySelect)))
+            $outputDataGroups.Add(($outputData.Where($groupFilter).ForEach([string]$propertySelect)))
         }
         
         trap { Write-Error $_ -EA 1 }
