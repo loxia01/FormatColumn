@@ -88,6 +88,7 @@ function Format-Column
     [Alias('fcol')]
     param (
         [Parameter(Position=0)]
+        [SupportsWildcards()]
         [Object]$Property,
         
         [Parameter(ParameterSetName='CustomSize', Mandatory)]
@@ -103,6 +104,7 @@ function Format-Column
         [int]$MinRowCount,
         
         [Parameter()]
+        [SupportsWildcards()]
         [Object]$GroupBy,
         
         [Parameter()]
@@ -118,6 +120,8 @@ function Format-Column
     
     # Property and GroupBy validation and processing
     
+    $properties = $InputObject | Get-Member -MemberType Properties -EA 0
+    
     if ($Property)
     {
         if ($Property -is [hashtable])
@@ -132,12 +136,16 @@ function Format-Column
             {
                 if ($pExpr -is [string])
                 {
-                    if ($pFormatStr) { $propertySelect = {$pFormatStr -f $_.$pExpr} }
-                    else             { $propertySelect = {[string]$_.$pExpr} }
+                    if ([wildcardpattern]::ContainsWildcardCharacters($pExpr))
+                    {
+                        $pExpr = $properties.Name.Where({$_ -like $pExpr})[0]
+                    }
+                    if ($pFormatStr) { $propertySelect = {$pFormatStr -f ($_.$pExpr -join ", ")} }
+                    else             { $propertySelect = {$_.$pExpr -join ", "} }
                 }
                 elseif ($pExpr -is [scriptblock])
                 {
-                    $pExpr = [scriptblock]::Create("[string]@(${pExpr})")
+                    $pExpr = [scriptblock]::Create("@(${pExpr}) -join ', '")
                     if ($pFormatStr) { $propertySelect = {$pFormatStr -f (& $pExpr)} }
                     else             { $propertySelect = $pExpr }
                 }
@@ -145,47 +153,54 @@ function Format-Column
             }
             else { Write-Error "Property hash table is missing mandatory expression entry." -Category 5 -EA 1 }
         }
-        elseif ($Property -is [string])      { $propertySelect = {[string]$_.$Property} }
-        elseif ($Property -is [scriptblock]) { $propertySelect = [scriptblock]::Create("[string]@(${Property})") }
+        elseif ($Property -is [string])
+        {
+            if ([wildcardpattern]::ContainsWildcardCharacters($Property))
+            {
+                $Property = $properties.Name.Where({$_ -like $Property})[0]
+            }
+            $propertySelect = {$_.$Property -join ", "}
+        }
+        elseif ($Property -is [scriptblock]) { $propertySelect = [scriptblock]::Create("@(${Property}) -join ', '") }
         else { Write-Error "Invalid Property type." -Category 5 -EA 1 }
     }
     else
     {
-        if ($InputObject[0].PSStandardMembers)
+        if ($InputObject.PSStandardMembers)
         {
             $defaultDisplayProperty =
-                if ($InputObject[0].PSStandardMembers.DefaultDisplayPropertySet -ne $null)
+                if ($InputObject.PSStandardMembers.DefaultDisplayPropertySet -ne $null)
                 {
-                    if ($InputObject[0].PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames -contains 'Name')
+                    if ($InputObject.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames -contains 'Name')
                     {
                         'Name'
                     }
-                    elseif ($InputObject[0].PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames -like '*Name')
+                    elseif ($InputObject.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames -like '*Name')
                     {
-                        @($InputObject[0].PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames.Where({$_ -like '*Name'}))[0]
+                        $InputObject.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames.Where({$_ -like '*Name'})[0]
                     }
-                    else { $InputObject[0].PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames[0] }
+                    else { $InputObject.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames[0] }
                 }
                 else
                 {
-                    $InputObject[0].PSStandardMembers.DefaultDisplayProperty
+                    @($InputObject.PSStandardMembers.DefaultDisplayProperty)[0]
                 }
             
-            $propertySelect = {[string]$_.$defaultDisplayProperty}
+            $propertySelect = {$_.$defaultDisplayProperty -join ", "}
         }
         else
         {
-            $customPropertyNames = @($InputObject)[0].PSObject.Properties.Where({$_.MemberType -ne 'Property'}).Name
+            $customPropertyNames = $properties.Where({$_.MemberType -notin 'Property','AliasProperty'}).Name
             if ($customPropertyNames)
             {
                 $displayProperty =
                     if     ($customPropertyNames -contains 'Name') { 'Name' }
-                    elseif ($customPropertyNames -like '*Name')    { @($customPropertyNames.Where({$_ -like '*Name'}))[0] }
+                    elseif ($customPropertyNames -like '*Name')    { $customPropertyNames.Where({$_ -like '*Name'})[0] }
                     else                                           { @($customPropertyNames)[0] }
                 
-                $propertySelect = { [string]$_.$displayProperty }
+                $propertySelect = {$_.$displayProperty -join ", "}
             }
-            else { $propertySelect = {[string]$_} }
+            else { $propertySelect = {$_ -join ", "} }
         }   
     }
     
@@ -210,12 +225,13 @@ function Format-Column
             {
                 if ($gExpr -is [string])
                 {
-                    if ($gFormatStr) { $groupSelect = {$gFormatStr -f $_.$gExpr} }
-                    else             { $groupSelect = {[string]$_.$gExpr} }
+                    $gExpr = $properties.Name.Where({$_ -like $gExpr})[0]
+                    if ($gFormatStr) { $groupSelect = {$gFormatStr -f ($_.$gExpr -join ", ")} }
+                    else             { $groupSelect = {$_.$gExpr -join ", "} }
                 }
                 elseif ($gExpr -is [scriptblock])
                 {
-                    $gExpr = [scriptblock]::Create("[string]@(${gExpr})")
+                    $gExpr = [scriptblock]::Create("@(${gExpr}) -join ', '")
                     if ($gFormatStr) { $groupSelect = {$gFormatStr -f (& $gExpr)} }
                     else             { $groupSelect = $gExpr }
                 }
@@ -223,36 +239,29 @@ function Format-Column
             }
             else { Write-Error "GroupBy hash table is missing mandatory expression entry." -Category 5 -EA 1 }
         }
-        elseif ($GroupBy -is [string]) { $groupSelect = {[string]$_.$GroupBy} }
-        elseif ($GroupBy -is [scriptblock]) { $groupSelect = [scriptblock]::Create("[string]@(${GroupBy})") }
+        elseif ($GroupBy -is [string])
+        {
+            $GroupBy = $properties.Name.Where({$_ -like $GroupBy})[0]
+            $groupSelect = {$_.$GroupBy -join ", "}
+        }
+        elseif ($GroupBy -is [scriptblock]) { $groupSelect = [scriptblock]::Create("@(${GroupBy}) -join ', '") }
         else { Write-Error "Invalid GroupBy type." -Category 5 -EA 1 }
         
         if (-not $gLabel)
         {
-            if (($GroupBy -is [string] -or $gExpr -is [string]))
-            {
-                $propertyNames = @($InputObject)[0].PSObject.Properties.Name
-                if ($gExpr) { $gLabel = $propertyNames.Where({$_ -eq $gExpr}) }
-                else        { $gLabel = $propertyNames.Where({$_ -eq $GroupBy}) }
-            }
-            if (-not $gLabel)
-            {
-                if ($gExpr) { $gLabel = $gExpr }
-                else        { $gLabel = $GroupBy }
-            }
+            if ($gExpr) { $gLabel = $gExpr }
+            else        { $gLabel = $GroupBy }
         }
         
         $outputData = $InputObject | ForEach-Object {
             [pscustomobject]@{$propertySelect = & $propertySelect; $groupSelect = & $groupSelect}
         }
-        
         $groupValues = $outputData.$groupSelect | Sort-Object -Unique
-        $groupFilter = {[string]$_.$groupSelect -eq $groupValue}
         
         $outputDataGroups = [Collections.Generic.List[Object]]@()
         foreach ($groupValue in $groupValues)
         {
-            $outputDataGroups.Add(($outputData.Where($groupFilter).ForEach([string]$propertySelect)))
+            $outputDataGroups.Add($outputData.Where({$_.$groupSelect -eq $groupValue}).$propertySelect)
         }
         
         trap { Write-Error $_ -EA 1 }
