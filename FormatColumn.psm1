@@ -120,7 +120,7 @@ function Format-Column
     
     # Property and GroupBy validation and processing
     
-    $properties = $InputObject | Get-Member -MemberType Properties -EA 0
+    $properties = @($InputObject)[0].PSObject.Properties
     
     if ($Property)
     {
@@ -166,24 +166,24 @@ function Format-Column
     }
     else
     {
-        if ($InputObject.PSStandardMembers)
+        if ($InputObject[0].PSStandardMembers)
         {
             $defaultDisplayProperty =
-                if ($InputObject.PSStandardMembers.DefaultDisplayPropertySet -ne $null)
+                if ($InputObject[0].PSStandardMembers.DefaultDisplayPropertySet -ne $null)
                 {
-                    if ($InputObject.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames -contains 'Name')
+                    if ($InputObject[0].PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames -contains 'Name')
                     {
                         'Name'
                     }
-                    elseif ($InputObject.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames -like '*Name')
+                    elseif ($InputObject[0].PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames -like '*Name')
                     {
-                        $InputObject.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames.Where({$_ -like '*Name'})[0]
+                        $InputObject[0].PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames.Where({$_ -like '*Name'})[0]
                     }
-                    else { $InputObject.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames[0] }
+                    else { $InputObject[0].PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames[0] }
                 }
                 else
                 {
-                    @($InputObject.PSStandardMembers.DefaultDisplayProperty)[0]
+                    $InputObject[0].PSStandardMembers.DefaultDisplayProperty
                 }
             
             $propertySelect = {$_.$defaultDisplayProperty -join ", "}
