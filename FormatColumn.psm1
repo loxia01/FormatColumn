@@ -120,7 +120,7 @@ function Format-Column
     
     # Property and GroupBy validation and processing
     
-    $properties = @($InputObject)[0].PSObject.Properties
+    $properties = $InputObject[0].PSObject.Properties
     
     if ($Property)
     {
