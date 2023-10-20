@@ -138,7 +138,7 @@ function Format-Column
                 {
                     if ([wildcardpattern]::ContainsWildcardCharacters($pExpr))
                     {
-                        $pExpr = $properties.Name.Where({$_ -like $pExpr})[0]
+                        $pExpr = $properties | Where-Object Name -Like $pExpr | Select-Object -ExpandProperty Name -First 1
                     }
                     if ($pFormatStr) { $propertySelect = {$pFormatStr -f ($_.$pExpr -join ", ")} }
                     else             { $propertySelect = {$_.$pExpr -join ", "} }
@@ -157,7 +157,7 @@ function Format-Column
         {
             if ([wildcardpattern]::ContainsWildcardCharacters($Property))
             {
-                $Property = $properties.Name.Where({$_ -like $Property})[0]
+                $Property = $properties | Where-Object Name -Like $Property | Select-Object -ExpandProperty Name -First 1
             }
             $propertySelect = {$_.$Property -join ", "}
         }
@@ -166,10 +166,10 @@ function Format-Column
     }
     else
     {
-        if ($InputObject[0].PSStandardMembers)
+        if ($InputObject[0].PSStandardMembers.DefaultDisplayPropertySet -or $InputObject[0].PSStandardMembers.DefaultDisplayProperty)
         {
             $defaultDisplayProperty =
-                if ($InputObject[0].PSStandardMembers.DefaultDisplayPropertySet -ne $null)
+                if ($InputObject[0].PSStandardMembers.DefaultDisplayPropertySet)
                 {
                     if ($InputObject[0].PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames -contains 'Name')
                     {
@@ -177,30 +177,28 @@ function Format-Column
                     }
                     elseif ($InputObject[0].PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames -like '*Name')
                     {
-                        $InputObject[0].PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames.Where({$_ -like '*Name'})[0]
+                        $InputObject[0].PSStandardMembers.DefaultDisplayPropertySet | Where-Object ReferencedPropertyNames -Like '*Name' |
+                            Select-Object -ExpandProperty ReferencedPropertyNames -First 1
                     }
                     else { $InputObject[0].PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames[0] }
                 }
-                else
-                {
-                    $InputObject[0].PSStandardMembers.DefaultDisplayProperty
-                }
+                else { $InputObject[0].PSStandardMembers.DefaultDisplayProperty }
             
             $propertySelect = {$_.$defaultDisplayProperty -join ", "}
         }
         else
         {
-            $customPropertyNames = $properties.Where({$_.MemberType -notin 'Property','AliasProperty'}).Name
-            if ($customPropertyNames)
-            {
-                $displayProperty =
-                    if     ($customPropertyNames -contains 'Name') { 'Name' }
-                    elseif ($customPropertyNames -like '*Name')    { $customPropertyNames.Where({$_ -like '*Name'})[0] }
-                    else                                           { @($customPropertyNames)[0] }
-                
-                $propertySelect = {$_.$displayProperty -join ", "}
-            }
-            else { $propertySelect = {$_ -join ", "} }
+            $displayProperty =
+                if     ($properties.Name -contains 'Name') { 'Name' }
+                elseif ($properties.Name -like '*Name')
+                {
+                    $properties | Where-Object Name -Like '*Name' | Select-Object -ExpandProperty Name -First 1
+                }
+                elseif (-not ($properties.Name -match '^(Count|Length)$')) { @($properties.Name)[0] }
+                else { $false }
+            
+            if ($displayProperty) { $propertySelect = {$_.$displayProperty -join ", "} }
+            else                  { $propertySelect = {$_ -join ", "} }
         }   
     }
     
