@@ -223,7 +223,7 @@ function Format-Column
             {
                 if ($gExpr -is [string])
                 {
-                    $gExpr = $properties.Name.Where({$_ -like $gExpr})[0]
+                    $gExpr = $properties | Where-Object Name -Like $gExpr | Select-Object -ExpandProperty Name -First 1
                     if ($gFormatStr) { $groupSelect = {$gFormatStr -f ($_.$gExpr -join ", ")} }
                     else             { $groupSelect = {$_.$gExpr -join ", "} }
                 }
@@ -239,7 +239,7 @@ function Format-Column
         }
         elseif ($GroupBy -is [string])
         {
-            $GroupBy = $properties.Name.Where({$_ -like $GroupBy})[0]
+            $GroupBy = $properties | Where-Object Name -Like $GroupBy | Select-Object -ExpandProperty Name -First 1
             $groupSelect = {$_.$GroupBy -join ", "}
         }
         elseif ($GroupBy -is [scriptblock]) { $groupSelect = [scriptblock]::Create("@(${GroupBy}) -join ', '") }
