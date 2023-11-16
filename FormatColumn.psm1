@@ -133,16 +133,14 @@ function Format-Column
                 elseif ($_ -match '^f(o(r(m(a(t(s(t(r(i(ng?)?)?)?)?)?)?)?)?)?)?$') { $pFormatStr = $Property.$_ }
                 else
                 {
-                    $message = "Invalid key '${_}' in Property hashtable."
-                    $errArgs = (New-Object NotSupportedException $message), 'DictionaryKeyIllegal', 5, $null
-                    $PSCmdlet.ThrowTerminatingError((New-Object ErrorRecord $errArgs))
+                    $exception = New-Object PSArgumentException "Invalid key '${_}' in Property hashtable."
+                    $PSCmdlet.ThrowTerminatingError((New-Object ErrorRecord $exception, 'DictionaryKeyIllegal', 5, $null))
                 }
-            }
+            } 
             if ($pFormatStr -and $pFormatStr -isnot [string])
             {
-                $message = "Formatstring key in Property hashtable is not of type String."
-                $errArgs = (New-Object NotSupportedException $message), 'DictionaryKeyIllegalValue', 5, $null
-                $PSCmdlet.ThrowTerminatingError((New-Object ErrorRecord $errArgs))
+                $exception = New-Object PSArgumentException "Formatstring key in Property hashtable is not of type String."
+                $PSCmdlet.ThrowTerminatingError((New-Object ErrorRecord $exception, 'DictionaryKeyIllegalValue', 5, $null))
             }
             if ($pExpr)
             {
@@ -163,16 +161,14 @@ function Format-Column
                 }
                 else
                 {
-                    $message = "Expression key in Property hashtable is not of type String or ScriptBlock."
-                    $errArgs = (New-Object NotSupportedException $message), 'DictionaryKeyIllegalValue', 5, $null
-                    $PSCmdlet.ThrowTerminatingError((New-Object ErrorRecord $errArgs))
+                    $exception = New-Object PSArgumentException "Expression key in Property hashtable is not of type String or ScriptBlock."
+                    $PSCmdlet.ThrowTerminatingError((New-Object ErrorRecord $exception, 'DictionaryKeyIllegalValue', 5, $null))
                 }
             }
             else
             {
-                $message = "Property hashtable is missing mandatory expression entry."
-                $errArgs = (New-Object NotSupportedException $message), 'DictionaryKeyMandatoryEntry', 5, $null
-                $PSCmdlet.ThrowTerminatingError((New-Object ErrorRecord $errArgs))
+                $exception = New-Object PSArgumentException "Property hashtable is missing mandatory expression key."
+                $PSCmdlet.ThrowTerminatingError((New-Object ErrorRecord $exception, 'DictionaryKeyMandatoryEntry', 5, $null))
             }
         }
         elseif ($Property -is [string])
@@ -186,9 +182,8 @@ function Format-Column
         elseif ($Property -is [scriptblock]) { $propertySelect = [scriptblock]::Create("@(${Property}) -join ', '") }
         else
         {
-            $message = "Property parameter value is not of type String, ScriptBlock or Hashtable."
-            $errArgs = (New-Object NotSupportedException $message), 'DictionaryKeyUnknownType', 5, $null
-            $PSCmdlet.ThrowTerminatingError((New-Object ErrorRecord $errArgs))
+            $exception = New-Object PSArgumentException "Property parameter value is not of type String, ScriptBlock or Hashtable."
+            $PSCmdlet.ThrowTerminatingError((New-Object ErrorRecord $exception, 'ArgumentUnknownType', 5, $null))
         }
     }
     else
@@ -244,22 +239,19 @@ function Format-Column
                 elseif ($_ -match '^f(o(r(m(a(t(s(t(r(i(ng?)?)?)?)?)?)?)?)?)?)?$') { $gFormatStr = $GroupBy.$_ }
                 else
                 {
-                    $message = "Invalid key '${_}' in GroupBy hashtable."
-                    $errArgs = (New-Object NotSupportedException $message), 'DictionaryKeyIllegal', 5, $null
-                    $PSCmdlet.ThrowTerminatingError((New-Object ErrorRecord $errArgs))
+                    $exception = New-Object PSArgumentException "Invalid key '${_}' in GroupBy hashtable."
+                    $PSCmdlet.ThrowTerminatingError((New-Object ErrorRecord $exception, 'DictionaryKeyIllegal', 5, $null))
                 }
             }
             if ($gLabel -and $gLabel -isnot [string])
             {
-                $message = "Label/Name key in GroupBy hashtable is not of type String."
-                $errArgs = (New-Object NotSupportedException $message), 'DictionaryKeyIllegalValue', 5, $null
-                $PSCmdlet.ThrowTerminatingError((New-Object ErrorRecord $errArgs))
+                $exception = New-Object PSArgumentException "Label/Name key in GroupBy hashtable is not of type String."
+                $PSCmdlet.ThrowTerminatingError((New-Object ErrorRecord $exception, 'DictionaryKeyIllegalValue', 5, $null))
             }
             if ($gFormatStr -and $gFormatStr -isnot [string])
             {
-                $message = "Formatstring key in GroupBy hashtable is not of type String."
-                $errArgs = (New-Object NotSupportedException $message), 'DictionaryKeyIllegalValue', 5, $null
-                $PSCmdlet.ThrowTerminatingError((New-Object ErrorRecord $errArgs))
+                $exception = New-Object PSArgumentException "Formatstring key in GroupBy hashtable is not of type String."
+                $PSCmdlet.ThrowTerminatingError((New-Object ErrorRecord $exception, 'DictionaryKeyIllegalValue', 5, $null))
             }
             if ($gExpr)
             {
@@ -277,16 +269,14 @@ function Format-Column
                 }
                 else
                 {
-                    $message = "Expression key in GroupBy hashtable is not of type String or ScriptBlock."
-                    $errArgs = (New-Object NotSupportedException $message), 'DictionaryKeyIllegalValue', 5, $null
-                    $PSCmdlet.ThrowTerminatingError((New-Object ErrorRecord $errArgs))
+                    $exception = New-Object PSArgumentException "Expression key in GroupBy hashtable is not of type String or ScriptBlock."
+                    $PSCmdlet.ThrowTerminatingError((New-Object ErrorRecord $exception, 'DictionaryKeyIllegalValue', 5, $null))
                 }
             }
             else
             {
-                $message = "GroupBy hashtable is missing mandatory expression entry."
-                $errArgs = (New-Object NotSupportedException $message), 'DictionaryKeyMandatoryEntry', 5, $null
-                $PSCmdlet.ThrowTerminatingError((New-Object ErrorRecord $errArgs))
+                $exception = New-Object PSArgumentException "GroupBy hashtable is missing mandatory expression key."
+                $PSCmdlet.ThrowTerminatingError((New-Object ErrorRecord $exception, 'DictionaryKeyMandatoryEntry', 5, $null))
             }
         }
         elseif ($GroupBy -is [string])
@@ -297,9 +287,8 @@ function Format-Column
         elseif ($GroupBy -is [scriptblock]) { $groupSelect = [scriptblock]::Create("@(${GroupBy}) -join ', '") }
         else
         {
-            $message = "GroupBy parameter value is not of type String, ScriptBlock or Hashtable."
-            $errArgs = (New-Object NotSupportedException $message), 'DictionaryKeyUnknownType', 5, $null
-            $PSCmdlet.ThrowTerminatingError((New-Object ErrorRecord $errArgs))
+            $exception = New-Object PSArgumentException "GroupBy parameter value is not of type String, ScriptBlock or Hashtable."
+            $PSCmdlet.ThrowTerminatingError((New-Object ErrorRecord $exception, 'ArgumentUnknownType', 5, $null))
         }
 
         if (-not $gLabel)
@@ -362,7 +351,11 @@ function Format-Column
                 }
             }
             # Write terminating error if column width is too small for truncate ellipsis "..."
-            else { Write-Error "ColumnCount value too large for output display." -Category 5 -EA 1 }
+            else
+            {
+                $exception = "ColumnCount value too large for output display."
+                $PSCmdlet.ThrowTerminatingError((New-Object ErrorRecord $exception, 'ColumnCountDisplayLimit', 5, $null))
+            }
         }
 
         # Create format string for output
@@ -441,7 +434,11 @@ function Format-Column
                     }
                 }
                 # Write terminating error if column width is too small for truncate ellipsis "..."
-                else { Write-Error "ColumnCount value too large for output display." -Category 5 -EA 1 }
+                else
+                {
+                    $exception = "ColumnCount value too large for output display."
+                    $PSCmdlet.ThrowTerminatingError((New-Object ErrorRecord $exception, 'ColumnCountDisplayLimit', 5, $null))
+                }
             }
 
             # Create format string for output
