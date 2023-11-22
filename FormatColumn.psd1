@@ -113,7 +113,7 @@ PrivateData = @{
         ReleaseNotes = @'
 v1.1.7:
 - Fixed a bug in auto display property selection.
-- Improvements in the auto display property selection process.
+- Improved auto display property selection process.
 - Improved error reporting.
 '@
 
