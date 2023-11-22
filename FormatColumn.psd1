@@ -112,8 +112,8 @@ PrivateData = @{
         # ReleaseNotes of this module
         ReleaseNotes = @'
 v1.1.7:
-- Fixed a bug in setting of auto display property.
-- Other improvements in auto display property retrieval.
+- Fixed a bug in auto display property selection.
+- Improvements in the auto display property selection process.
 - Improved error reporting.
 '@
 
