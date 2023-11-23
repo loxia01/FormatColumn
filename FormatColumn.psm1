@@ -226,8 +226,8 @@ function Format-Column
 
     if (-not $GroupBy)
     {
-        $outputData = $InputObject | ForEach-Object $propertySelect
-        trap { $PSCmdlet.ThrowTerminatingError($_) }
+        try   { $outputData = $InputObject | ForEach-Object $propertySelect }
+        catch { $PSCmdlet.ThrowTerminatingError($_) }
     }
     else
     {
@@ -297,9 +297,14 @@ function Format-Column
             else        { $gLabel = $GroupBy }
         }
 
-        $outputData = $InputObject | ForEach-Object {
-            [pscustomobject]@{$propertySelect = & $propertySelect; $groupSelect = & $groupSelect}
+        try
+        {
+            $outputData = $InputObject | ForEach-Object {
+                [pscustomobject]@{$propertySelect = & $propertySelect; $groupSelect = & $groupSelect}
+            }
         }
+        catch { $PSCmdlet.ThrowTerminatingError($_) }
+
         $groupValues = $outputData.$groupSelect | Sort-Object -Unique
 
         $outputDataGroups = [Collections.Generic.List[Object]]@()
@@ -307,8 +312,6 @@ function Format-Column
         {
             $outputDataGroups.Add($outputData.Where({$_.$groupSelect -eq $groupValue}).$propertySelect)
         }
-
-        trap { $PSCmdlet.ThrowTerminatingError($_) }
     }
 
     # Output Processing
