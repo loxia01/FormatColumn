@@ -257,7 +257,10 @@ function Format-Column
             {
                 if ($gExpr -is [string])
                 {
-                    $gExpr = $properties | Where-Object Name -Like $gExpr | Select-Object -ExpandProperty Name -First 1
+                    if ([wildcardpattern]::ContainsWildcardCharacters($gExpr))
+                    {
+                        $gExpr = $properties | Where-Object Name -Like $gExpr | Select-Object -ExpandProperty Name -First 1
+                    }
                     if ($gFormatStr) { $groupSelect = {$gFormatStr -f ($_.$gExpr -join ", ")} }
                     else             { $groupSelect = {$_.$gExpr -join ", "} }
                 }
@@ -281,7 +284,10 @@ function Format-Column
         }
         elseif ($GroupBy -is [string])
         {
-            $GroupBy = $properties | Where-Object Name -Like $GroupBy | Select-Object -ExpandProperty Name -First 1
+            if ([wildcardpattern]::ContainsWildcardCharacters($GroupBy))
+            {
+                $GroupBy = $properties | Where-Object Name -Like $GroupBy | Select-Object -ExpandProperty Name -First 1
+            }
             $groupSelect = {$_.$GroupBy -join ", "}
         }
         elseif ($GroupBy -is [scriptblock]) { $groupSelect = [scriptblock]::Create("@(${GroupBy}) -join ', '") }
@@ -307,7 +313,7 @@ function Format-Column
 
         $groups = $outputData.$groupSelect | Sort-Object -Unique
 
-        if ($groups)
+        if ($GroupBy)
         {
             $outputDataGroups = [Collections.Generic.List[Object]]@()
             foreach ($group in $groups)
@@ -324,7 +330,7 @@ function Format-Column
     else             { $consoleWidth = $Host.UI.RawUI.BufferSize.Width }
     $columnGap = 1
 
-    if (-not $groups)
+    if (-not $GroupBy)
     {
         $maxLength = ($outputData | Measure-Object Length -Maximum).Maximum
 
