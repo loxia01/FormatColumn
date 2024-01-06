@@ -305,13 +305,17 @@ function Format-Column
         }
         catch { $PSCmdlet.ThrowTerminatingError($_) }
 
-        $groupValues = $outputData.$groupSelect | Sort-Object -Unique
+        $groups = $outputData.$groupSelect | Sort-Object -Unique
 
-        $outputDataGroups = [Collections.Generic.List[Object]]@()
-        foreach ($groupValue in $groupValues)
+        if ($groups)
         {
-            $outputDataGroups.Add($outputData.Where({$_.$groupSelect -eq $groupValue}).$propertySelect)
+            $outputDataGroups = [Collections.Generic.List[Object]]@()
+            foreach ($group in $groups)
+            {
+                $outputDataGroups.Add(($outputData | Where-Object $groupSelect -EQ $group | Select-Object -ExpandProperty $propertySelect))
+            }
         }
+        else { $outputData = $outputData.$propertySelect }
     }
 
     # Output Processing
@@ -320,7 +324,7 @@ function Format-Column
     else             { $consoleWidth = $Host.UI.RawUI.BufferSize.Width }
     $columnGap = 1
 
-    if (-not $outputDataGroups)
+    if (-not $groups)
     {
         $maxLength = ($outputData | Measure-Object Length -Maximum).Maximum
 
@@ -455,7 +459,7 @@ function Format-Column
             # Output data ordered column by column or row by row, adding group label and value
 
             if ($PSEdition -eq 'Desktop') { Write-Output "" }
-            Write-Output "`n   ${gLabel}: $(@($groupValues)[$i])`n"
+            Write-Output "`n   ${gLabel}: $(@($groups)[$i])`n"
             if ($PSEdition -eq 'Desktop') { Write-Output "" }
 
             if ($OrderBy -eq 'Column')
@@ -480,7 +484,7 @@ function Format-Column
                     Write-Output ($formatString -f $lineContent)
                 }
             }
-            if (++$i -eq $groupValues.Count)
+            if (++$i -eq $groups.Count)
             {
                 if ($PSEdition -eq 'Desktop') { Write-Output "`n" }
                 else                          { Write-Output "" }
