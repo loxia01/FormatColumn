@@ -227,7 +227,11 @@ function Format-Column
     if (-not $GroupBy)
     {
         try   { $outputData = $InputObject | ForEach-Object $propertySelect }
-        catch { $PSCmdlet.ThrowTerminatingError($_) }
+        catch
+        {
+            $exception = New-Object PSArgumentException -Args "Error in argument expression: ""$($_.Exception.Message)""", $_.Exception
+            $PSCmdlet.ThrowTerminatingError((New-Object ErrorRecord -Args $exception, 'ArgumentExpressionError', 5, $null))
+        }
     }
     else
     {
@@ -309,7 +313,11 @@ function Format-Column
                 [pscustomobject]@{$propertySelect = & $propertySelect; $groupSelect = & $groupSelect}
             }
         }
-        catch { $PSCmdlet.ThrowTerminatingError($_) }
+        catch
+        {
+            $exception = New-Object PSArgumentException -Args "Error in argument expression: ""$($_.Exception.Message)""", $_.Exception
+            $PSCmdlet.ThrowTerminatingError((New-Object ErrorRecord -Args $exception, 'ArgumentExpressionError', 5, $null))
+        }
 
         $groups = $outputData.$groupSelect | Sort-Object -Unique
 
