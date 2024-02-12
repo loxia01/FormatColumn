@@ -15,7 +15,7 @@ RootModule = 'FormatColumn.psm1'
 ModuleVersion = '1.1.8'
 
 # Supported PSEditions
-# CompatiblePSEditions = @()
+CompatiblePSEditions = @('Desktop','Core')
 
 # ID used to uniquely identify this module
 GUID = '06cd82bc-8a8f-4daa-8307-190d68ef52ce'
