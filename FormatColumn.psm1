@@ -43,7 +43,6 @@ function Format-Column
  - a hash table. Valid syntaxes are:
      - @{Expression=<string>|{<scriptblock>}}
      - @{Label/Name=<string>; Expression=<string>|{<scriptblock>}}
-     - @{Label/Name=<string>; Expression=<string>|{<scriptblock>}; FormatString=<string>}
 
  - a script block: {<scriptblock>}
 
@@ -229,8 +228,8 @@ function Format-Column
         try   { $outputData = $InputObject | ForEach-Object $propertySelect }
         catch
         {
-            $exception = New-Object PSArgumentException -Args "Error in argument expression: ""$($_.Exception.Message)""", $_.Exception
-            $PSCmdlet.ThrowTerminatingError((New-Object ErrorRecord -Args $exception, 'ArgumentExpressionError', 5, $null))
+            $exception = New-Object PSArgumentException -Args $_.Exception.Message, $_.Exception
+            $PSCmdlet.ThrowTerminatingError((New-Object ErrorRecord -Args $exception, 'ArgumentException', 5, $null))
         }
     }
     else
@@ -238,9 +237,8 @@ function Format-Column
         if ($GroupBy -is [hashtable])
         {
             $GroupBy.Keys | ForEach-Object {
-                if     ($_ -match '^n(a(me?)?)?$|^l(a(b(el?)?)?)?$')               { $gLabel = $GroupBy.$_ }
-                elseif ($_ -match '^e(x(p(r(e(s(s(i(on?)?)?)?)?)?)?)?)?$')         { $gExpr = $GroupBy.$_ }
-                elseif ($_ -match '^f(o(r(m(a(t(s(t(r(i(ng?)?)?)?)?)?)?)?)?)?)?$') { $gFormatStr = $GroupBy.$_ }
+                if     ($_ -match '^n(a(me?)?)?$|^l(a(b(el?)?)?)?$')       { $gLabel = $GroupBy.$_ }
+                elseif ($_ -match '^e(x(p(r(e(s(s(i(on?)?)?)?)?)?)?)?)?$') { $gExpr = $GroupBy.$_ }
                 else
                 {
                     $exception = New-Object PSArgumentException "Invalid key '${_}' in GroupBy hashtable."
@@ -252,11 +250,6 @@ function Format-Column
                 $exception = New-Object PSArgumentException "Label/Name key in GroupBy hashtable is not of type String."
                 $PSCmdlet.ThrowTerminatingError((New-Object ErrorRecord -Args $exception, 'DictionaryKeyIllegalValue', 5, $null))
             }
-            if ($gFormatStr -and $gFormatStr -isnot [string])
-            {
-                $exception = New-Object PSArgumentException "Formatstring key in GroupBy hashtable is not of type String."
-                $PSCmdlet.ThrowTerminatingError((New-Object ErrorRecord -Args $exception, 'DictionaryKeyIllegalValue', 5, $null))
-            }
             if ($gExpr)
             {
                 if ($gExpr -is [string])
@@ -265,15 +258,11 @@ function Format-Column
                     {
                         $gExpr = $properties | Where-Object Name -Like $gExpr | Select-Object -ExpandProperty Name -First 1
                     }
-                    if ($gFormatStr) { $groupSelect = {$gFormatStr -f ($_.$gExpr -join ", ")} }
-                    else             { $groupSelect = {$_.$gExpr -join ", "} }
+                    else { $gExpr = $properties | Where-Object Name -EQ $gExpr | Select-Object -ExpandProperty Name }
+
+                    $groupSelect = {$_.$gExpr -join ", "}
                 }
-                elseif ($gExpr -is [scriptblock])
-                {
-                    $gExpr = [scriptblock]::Create("@(${gExpr}) -join ', '")
-                    if ($gFormatStr) { $groupSelect = {$gFormatStr -f (& $gExpr)} }
-                    else             { $groupSelect = $gExpr }
-                }
+                elseif ($gExpr -is [scriptblock]) { $groupSelect = [scriptblock]::Create("@(${gExpr}) -join ', '") }
                 else
                 {
                     $exception = New-Object PSArgumentException "Expression key in GroupBy hashtable is not of type String or ScriptBlock."
@@ -292,6 +281,8 @@ function Format-Column
             {
                 $GroupBy = $properties | Where-Object Name -Like $GroupBy | Select-Object -ExpandProperty Name -First 1
             }
+            else { $GroupBy = $properties | Where-Object Name -EQ $GroupBy | Select-Object -ExpandProperty Name }
+
             $groupSelect = {$_.$GroupBy -join ", "}
         }
         elseif ($GroupBy -is [scriptblock]) { $groupSelect = [scriptblock]::Create("@(${GroupBy}) -join ', '") }
@@ -301,35 +292,29 @@ function Format-Column
             $PSCmdlet.ThrowTerminatingError((New-Object ErrorRecord -Args $exception, 'ArgumentUnknownType', 5, $null))
         }
 
-        if (-not $gLabel)
-        {
-            if ($gExpr) { $gLabel = $gExpr }
-            else        { $gLabel = $GroupBy }
-        }
-
         try
         {
-            $outputData = $InputObject | ForEach-Object {
-                [pscustomobject]@{$propertySelect = & $propertySelect; $groupSelect = & $groupSelect}
-            }
+            $outputData = $InputObject | ForEach-Object { [pscustomobject]@{$propertySelect = & $propertySelect; $groupSelect = & $groupSelect} }
         }
         catch
         {
-            $exception = New-Object PSArgumentException -Args "Error in argument expression: ""$($_.Exception.Message)""", $_.Exception
-            $PSCmdlet.ThrowTerminatingError((New-Object ErrorRecord -Args $exception, 'ArgumentExpressionError', 5, $null))
+            $exception = New-Object PSArgumentException -Args $_.Exception.Message, $_.Exception
+            $PSCmdlet.ThrowTerminatingError((New-Object ErrorRecord -Args $exception, 'ArgumentException', 5, $null))
         }
 
         $groups = $outputData.$groupSelect | Sort-Object -Unique
 
-        if ($GroupBy)
+        $outputDataGroups = [Collections.Generic.List[Object]]@()
+        foreach ($group in $groups)
         {
-            $outputDataGroups = [Collections.Generic.List[Object]]@()
-            foreach ($group in $groups)
-            {
-                $outputDataGroups.Add(($outputData | Where-Object $groupSelect -EQ $group | Select-Object -ExpandProperty $propertySelect))
-            }
+            $outputDataGroups.Add(($outputData | Where-Object $groupSelect -EQ $group | Select-Object -ExpandProperty $propertySelect))
         }
-        else { $outputData = $outputData.$propertySelect }
+
+        if (-not $gLabel -and $groups)
+        {
+            if ($gExpr) { $gLabel = $gExpr }
+            else        { $gLabel = $GroupBy }
+        }
     }
 
     # Output Processing
@@ -338,7 +323,7 @@ function Format-Column
     else             { $consoleWidth = $Host.UI.RawUI.BufferSize.Width }
     $columnGap = 1
 
-    if (-not $GroupBy)
+    if (-not $outputDataGroups)
     {
         $maxLength = ($outputData | Measure-Object Length -Maximum).Maximum
 
@@ -473,7 +458,7 @@ function Format-Column
             # Output data ordered column by column or row by row, adding group label and value
 
             if ($PSEdition -eq 'Desktop') { Write-Output "" }
-            Write-Output "`n   ${gLabel}: $(@($groups)[$i])`n"
+            Write-Output ("`n   {0}: {1}`n" -f $gLabel, @($groups)[$i])
             if ($PSEdition -eq 'Desktop') { Write-Output "" }
 
             if ($OrderBy -eq 'Column')
