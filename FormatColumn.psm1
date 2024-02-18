@@ -19,7 +19,6 @@ function Format-Column
      - @{Expression=<string>|{<scriptblock>}}
      - @{FormatString=<string>}
      - @{Expression=<string>|{<scriptblock>}; FormatString=<string>}
-
  - a script block: {<scriptblock>}
 
  Property parameter is optional. However, if omitted for data containing properties,
@@ -39,11 +38,11 @@ function Format-Column
 
 .PARAMETER GroupBy
  Formats the output in groups based on a shared property or value. Optional.
- Can be the name of a property or an expression (hash table or script block):
+
+ Can be the name of a property or it can be an expression in the form of:
  - a hash table. Valid syntaxes are:
      - @{Expression=<string>|{<scriptblock>}}
      - @{Label/Name=<string>; Expression=<string>|{<scriptblock>}}
-
  - a script block: {<scriptblock>}
 
 .PARAMETER OrderBy
