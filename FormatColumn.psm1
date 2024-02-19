@@ -22,7 +22,7 @@ function Format-Column
  - a script block: {<scriptblock>}
 
  Property parameter is optional. However, if omitted for data containing properties,
- but missing DefaultDisplayProperty, no comprehensible data output will be produced.
+ but missing DefaultDisplayProperty or name property, no comprehensible data output will be produced.
 
 .PARAMETER ColumnCount
  Number of columns to display (CustomSize mode). If ColumnCount parameter is omitted the number
