@@ -39,7 +39,7 @@ function Format-Column
 .PARAMETER GroupBy
  Formats the output in groups based on a shared property or value. Optional.
 
- Can be the name of a property or it can be an expression in the form of:
+ Can be the name of a property or it can be a calculated property:
  - a hash table. Valid syntaxes are:
      - @{Expression=<string>|{<scriptblock>}}
      - @{Label/Name=<string>; Expression=<string>|{<scriptblock>}}
