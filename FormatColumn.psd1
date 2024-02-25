@@ -112,7 +112,7 @@ PrivateData = @{
         # ReleaseNotes of this module
         ReleaseNotes = @'
 v1.1.9:
-- Minor improvements to GroupBy processing and output.
+- Improvements to GroupBy processing and output.
 - More informative error messages.
 '@
 
