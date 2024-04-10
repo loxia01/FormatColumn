@@ -293,7 +293,7 @@ function Format-Column
 
         try
         {
-            $outputData = $InputObject | ForEach-Object { [pscustomobject]@{$propertySelect = & $propertySelect; $groupSelect = & $groupSelect} }
+            $outputData = $InputObject | ForEach-Object {[pscustomobject]@{$propertySelect = & $propertySelect; $groupSelect = & $groupSelect}}
         }
         catch
         {
