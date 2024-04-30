@@ -114,8 +114,8 @@ function Format-Column
         [Parameter(ValueFromPipeline)]
         [psobject]$InputObject
     )
-
     if ($null -eq $InputObject -and ($input -ne $null).Count -eq 0) { return }
+
     if ($input) { $InputObject = $input }
 
     # Property and GroupBy validation and processing
